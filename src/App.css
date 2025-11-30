@@ -1,0 +1,564 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Satoshi', -apple-system, sans-serif;
+  background: #fafafa;
+  color: #111;
+  text-transform: lowercase;
+}
+
+.app {
+  min-height: 100vh;
+  background: #fff;
+  position: relative;
+  padding-bottom: 80px;
+}
+
+/* header */
+.header {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  padding: 20px 24px;
+  z-index: 100;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* feed */
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  padding: 32px 0;
+}
+
+/* post */
+.post {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+}
+
+.username {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.media-type {
+  font-size: 0.75rem;
+  color: #888;
+  padding: 4px 10px;
+  background: #f5f5f5;
+  border-radius: 20px;
+}
+
+.post-image-container {
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f0f0f0;
+  margin: 0 24px;
+  border-radius: 8px;
+}
+
+.post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-content {
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.post-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.post-comment {
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.post-actions {
+  padding: 0 24px;
+}
+
+.like-button {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #666;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.2s;
+}
+
+.like-button:hover {
+  color: #111;
+}
+
+.like-button.liked {
+  color: #e74c3c;
+}
+
+/*  nav */
+.nav {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: #999;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: color 0.2s;
+  text-transform: lowercase;
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  color: #111;
+}
+
+.nav-item.active {
+  color: #111;
+  font-weight: 500;
+}
+
+::-webkit-scrollbar {
+  width: 0px;
+}
+
+/* profile */
+.profile {
+  padding: 32px 24px;
+}
+
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-username {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.profile-bio {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 24px;
+  margin-top: 4px;
+}
+
+.stat-number {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.tune-button {
+  margin-top: 16px;
+  padding: 10px 32px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tune-button:hover {
+  background: #333;
+}
+
+.tune-button.tuned {
+  background: #fff;
+  color: #111;
+  border: 1px solid #ddd;
+}
+
+/* avatar edit */
+.avatar-container {
+  position: relative;
+}
+
+.avatar-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  background: #111;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* bio edit */
+.profile-bio {
+  cursor: pointer;
+}
+
+.bio-edit-hint {
+  font-size: 0.75rem;
+  color: #ccc;
+}
+
+.edit-bio {
+  width: 100%;
+  max-width: 280px;
+}
+
+.edit-bio textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: none;
+  text-align: center;
+}
+
+.edit-bio-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.edit-bio-buttons button {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 16px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: #111;
+  color: #fff;
+}
+
+.edit-bio-buttons button.cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+/* profile recs list */
+.profile-recs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.profile-rec {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.profile-rec:hover {
+  background: #f9f9f9;
+}
+
+.profile-rec-image {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.profile-rec-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-rec-type {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.profile-rec-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+
+/* create */
+.create {
+  padding: 32px 24px;
+}
+
+.create-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #111;
+}
+
+.form-group textarea {
+  resize: none;
+}
+
+/* category pills */
+.category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.category-pill {
+  padding: 8px 16px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-pill:hover {
+  background: #eee;
+}
+
+.category-pill.active {
+  background: #111;
+  color: #fff;
+}
+
+.category-pill.add-pill {
+  background: none;
+  border: 1px dashed #ccc;
+  color: #999;
+}
+
+.category-pill.add-pill:hover {
+  border-color: #111;
+  color: #111;
+}
+
+/* custom category input */
+.custom-category {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.custom-category input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.custom-category button {
+  padding: 8px 16px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* file input */
+.file-input {
+  padding: 12px;
+  background: #f9f9f9;
+  border: 1px dashed #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.image-preview {
+  width: 100%;
+  max-width: 200px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+/* submit */
+.submit-button {
+  padding: 14px 24px;
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+}
+
+.submit-button:hover {
+  background: #333;
+}
+
+/* search */
+.search {
+  padding: 24px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: #f9f9f9;
+  transition: all 0.2s;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #111;
+  background: #fff;
+}
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  margin-top: 24px;
+}
+
+.search-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.search-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.search-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.search-username {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.search-bio {
+  font-size: 0.8rem;
+  color: #888;
+}
