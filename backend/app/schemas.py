@@ -46,6 +46,26 @@ class RecOut(BaseModel):
     image: str
     created_at: datetime
     username: str | None = None
+    likes_count: int = 0
+    is_liked: bool = False
+
+    class Config:
+        from_attributes = True
+
+# Follow
+class FollowOut(BaseModel):
+    follower_id: int
+    following_id: int
+
+class UserProfile(BaseModel):
+    id: int
+    username: str
+    bio: str
+    avatar: str
+    recs_count: int
+    tuned_in: int
+    tuned_to: int
+    is_following: bool = False
 
     class Config:
         from_attributes = True
