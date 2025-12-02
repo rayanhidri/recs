@@ -1,124 +1,108 @@
-import { useState } from 'react'
-
-const mockUser = {
-  username: 'rayan',
-  bio: 'music, films, et trucs cool.',
-  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
-  recs: 12,
-  tunedIn: 48,
-  tunedTo: 124,
-  isOwnProfile: true,
-}
-
-const mockRecs = [
-  {
-    id: 1,
-    type: 'music',
-    title: 'frank ocean - blonde',
-    image: 'https://upload.wikimedia.org/wikipedia/en/a/a0/Blonde_-_Frank_Ocean.jpeg',
-  },
-  {
-    id: 2,
-    type: 'film',
-    title: 'la haine',
-    image: 'https://upload.wikimedia.org/wikipedia/en/2/2b/La_Haine.jpg',
-  },
-  {
-    id: 3,
-    type: 'article',
-    title: 'how to do nothing',
-    image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400',
-  },
-]
+import { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { getMe, getUser, getUserRecs, followUser, unfollowUser } from '../api'
+import { useAuth } from '../context/AuthContext'
 
 export default function Profile() {
-  const [user, setUser] = useState(mockUser)
-  const [recs] = useState(mockRecs)
-  const [isTuned, setIsTuned] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
-  const [editBio, setEditBio] = useState(user.bio)
+  const { username } = useParams()
+  const { user: currentUser } = useAuth()
+  const [user, setUser] = useState(null)
+  const [recs, setRecs] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setUser({ ...user, avatar: URL.createObjectURL(file) })
+  const isOwnProfile = !username || username === currentUser?.username
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userRes = isOwnProfile 
+          ? await getMe() 
+          : await getUser(username)
+        setUser(userRes.data)
+
+        const recsRes = await getUserRecs(userRes.data.username)
+        setRecs(recsRes.data)
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [username, isOwnProfile])
+
+  const handleFollow = async () => {
+    try {
+      if (user.is_following) {
+        await unfollowUser(user.username)
+        setUser({ ...user, is_following: false, tuned_in: user.tuned_in - 1 })
+      } else {
+        await followUser(user.username)
+        setUser({ ...user, is_following: true, tuned_in: user.tuned_in + 1 })
+      }
+    } catch (err) {
+      console.error(err)
     }
   }
 
-  const handleSaveBio = () => {
-    setUser({ ...user, bio: editBio })
-    setIsEditing(false)
-  }
+  if (loading) return <div className="loading">loading...</div>
+  if (!user) return <div className="loading">user not found</div>
 
   return (
     <div className="profile">
       <div className="profile-header">
         <div className="avatar-container">
-          <img src={user.avatar} alt={user.username} className="profile-avatar" />
-          {user.isOwnProfile && (
-            <label className="avatar-edit">
-              <input type="file" accept="image/*" onChange={handleAvatarChange} hidden />
-              ✎
-            </label>
-          )}
+          <img 
+            src={user.avatar || 'https://via.placeholder.com/100'} 
+            alt={user.username} 
+            className="profile-avatar" 
+          />
         </div>
         
         <h2 className="profile-username">{user.username}</h2>
-        
-        {isEditing ? (
-          <div className="edit-bio">
-            <textarea
-              value={editBio}
-              onChange={(e) => setEditBio(e.target.value)}
-              rows={2}
-            />
-            <div className="edit-bio-buttons">
-              <button onClick={handleSaveBio}>save</button>
-              <button onClick={() => setIsEditing(false)} className="cancel">cancel</button>
-            </div>
-          </div>
-        ) : (
-          <p className="profile-bio" onClick={() => user.isOwnProfile && setIsEditing(true)}>
-            {user.bio}
-            {user.isOwnProfile && <span className="bio-edit-hint"> ✎</span>}
-          </p>
-        )}
+        <p className="profile-bio">{user.bio || 'no bio yet'}</p>
         
         <div className="profile-stats">
           <div className="stat">
-            <span className="stat-number">{user.recs}</span>
+            <span className="stat-number">{user.recs_count}</span>
             <span className="stat-label">recs</span>
           </div>
           <div className="stat">
-            <span className="stat-number">{user.tunedIn}</span>
+            <span className="stat-number">{user.tuned_in}</span>
             <span className="stat-label">tuned in</span>
           </div>
           <div className="stat">
-            <span className="stat-number">{user.tunedTo}</span>
+            <span className="stat-number">{user.tuned_to}</span>
             <span className="stat-label">tuned to</span>
           </div>
         </div>
 
-        {!user.isOwnProfile && (
+        {!isOwnProfile && (
           <button 
-            className={`tune-button ${isTuned ? 'tuned' : ''}`}
-            onClick={() => setIsTuned(!isTuned)}
+            className={`tune-button ${user.is_following ? 'tuned' : ''}`}
+            onClick={handleFollow}
           >
-            {isTuned ? 'tuned' : 'tune in'}
+            {user.is_following ? 'tuned' : 'tune in'}
           </button>
         )}
       </div>
 
       <div className="profile-recs">
-        {recs.map(rec => (
-          <div key={rec.id} className="profile-rec">
-            <img src={rec.image} alt={rec.title} className="profile-rec-image" />
-            <div className="profile-rec-info">
-              <span className="profile-rec-type">{rec.type}</span>
-              <h3 className="profile-rec-title">{rec.title}</h3>
+        {recs.length === 0 ? (
+          <p className="no-recs">no recs yet</p>
+        ) : (
+          recs.map(rec => (
+            <div key={rec.id} className="profile-rec">
+              {rec.image && (
+                <img src={rec.image} alt={rec.title} className="profile-rec-image" />
+              )}
+              <div className="profile-rec-info">
+                <span className="profile-rec-type">{rec.category}</span>
+                <h3 className="profile-rec-title">{rec.title}</h3>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   )

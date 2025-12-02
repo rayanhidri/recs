@@ -1,61 +1,36 @@
-import { useState } from 'react'
-
-const mockPosts = [
-  {
-    id: 1,
-    username: 'marie',
-    type: 'music',
-    title: 'noir désir - tostaky',
-    comment: "l'album qui m'a fait aimer le rock français. chaque track est une claque.",
-    image: 'https://upload.wikimedia.org/wikipedia/en/2/2e/Tostaky_album.jpg',
-    likes: 24,
-    liked: false,
-  },
-  {
-    id: 2,
-    username: 'thomas',
-    type: 'film',
-    title: 'aftersun',
-    comment: 'je suis resté assis 10 min après le générique. devastating.',
-    image: 'https://upload.wikimedia.org/wikipedia/en/c/c2/Aftersun_%282022_film%29.jpg',
-    likes: 41,
-    liked: true,
-  },
-  {
-    id: 3,
-    username: 'léa',
-    type: 'article',
-    title: 'the age of average',
-    comment: "pourquoi tout se ressemble maintenant. airports, cafés, logos. mind blowing read.",
-    image: 'https://images.unsplash.com/photo-1432821596592-e2c18b78144f?w=800',
-    likes: 67,
-    liked: false,
-  },
-]
+import { useState, useEffect } from 'react'
+import { getFeed, likeRec, unlikeRec } from '../api'
 
 function Post({ post, onLike }) {
   return (
     <article className="post">
       <div className="post-header">
         <span className="username">{post.username}</span>
-        <span className="media-type">{post.type}</span>
+        <span className="media-type">{post.category}</span>
       </div>
       
-      <div className="post-image-container">
-        <img src={post.image} alt={post.title} className="post-image" />
-      </div>
+      {post.image && (
+        <div className="post-image-container">
+          <img src={post.image} alt={post.title} className="post-image" />
+        </div>
+      )}
       
       <div className="post-content">
         <h2 className="post-title">{post.title}</h2>
-        <p className="post-comment">{post.comment}</p>
+        <p className="post-comment">{post.description}</p>
+        {post.link && (
+          <a href={post.link} target="_blank" rel="noopener noreferrer" className="post-link">
+            open link ↗
+          </a>
+        )}
       </div>
       
       <div className="post-actions">
         <button 
-          className={`like-button ${post.liked ? 'liked' : ''}`}
-          onClick={() => onLike(post.id)}
+          className={`like-button ${post.is_liked ? 'liked' : ''}`}
+          onClick={() => onLike(post.id, post.is_liked)}
         >
-          {post.liked ? '♥' : '♡'} {post.likes}
+          {post.is_liked ? '♥' : '♡'} {post.likes_count}
         </button>
       </div>
     </article>
@@ -63,19 +38,47 @@ function Post({ post, onLike }) {
 }
 
 export default function Feed() {
-  const [posts, setPosts] = useState(mockPosts)
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const handleLike = (postId) => {
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          liked: !post.liked,
-          likes: post.liked ? post.likes - 1 : post.likes + 1
-        }
+  useEffect(() => {
+    getFeed()
+      .then(res => setPosts(res.data))
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const handleLike = async (postId, isLiked) => {
+    try {
+      if (isLiked) {
+        await unlikeRec(postId)
+      } else {
+        await likeRec(postId)
       }
-      return post
-    }))
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            is_liked: !isLiked,
+            likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1
+          }
+        }
+        return post
+      }))
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  if (loading) return <div className="loading">loading...</div>
+
+  if (posts.length === 0) {
+    return (
+      <div className="empty-feed">
+        <p>no recs yet</p>
+        <p>follow people to see their recs here</p>
+      </div>
+    )
   }
 
   return (

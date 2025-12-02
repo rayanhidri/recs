@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { createRec } from '../api'
 
 const defaultCategories = ['music', 'film', 'article', 'podcast', 'video', 'book', 'fashion']
 
@@ -8,12 +9,13 @@ export default function Create() {
   const [categories, setCategories] = useState(defaultCategories)
   const [customCategory, setCustomCategory] = useState('')
   const [showCustomInput, setShowCustomInput] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     category: 'music',
     title: '',
     description: '',
     link: '',
-    image: null
+    image: ''
   })
 
   const handleAddCategory = () => {
@@ -26,18 +28,18 @@ export default function Create() {
     }
   }
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      setForm({...form, image: URL.createObjectURL(file)})
-    }
-  }
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log('New rec:', form)
-    alert('rec posted! (fake pour linstant)')
-    navigate('/')
+    setLoading(true)
+    try {
+      await createRec(form)
+      navigate('/')
+    } catch (err) {
+      console.error(err)
+      alert('failed to create rec')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -87,6 +89,7 @@ export default function Create() {
             placeholder="name of the thing..."
             value={form.title}
             onChange={(e) => setForm({...form, title: e.target.value})}
+            required
           />
         </div>
 
@@ -111,20 +114,17 @@ export default function Create() {
         </div>
 
         <div className="form-group">
-          <label>or image</label>
+          <label>image url</label>
           <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="file-input"
+            type="url"
+            placeholder="https://image-url..."
+            value={form.image}
+            onChange={(e) => setForm({...form, image: e.target.value})}
           />
-          {form.image && (
-            <img src={form.image} alt="preview" className="image-preview" />
-          )}
         </div>
 
-        <button type="submit" className="submit-button">
-          post rec
+        <button type="submit" className="submit-button" disabled={loading}>
+          {loading ? 'posting...' : 'post rec'}
         </button>
       </form>
     </div>

@@ -1,31 +1,51 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-const mockUsers = [
-  { id: 1, username: 'marie', bio: 'music lover, film addict', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200', tuned: false },
-  { id: 2, username: 'thomas', bio: 'cinema et podcasts', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200', tuned: true },
-  { id: 3, username: 'léa', bio: 'articles, books, thoughts', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200', tuned: false },
-  { id: 4, username: 'jules', bio: 'rap fr, underground stuff', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200', tuned: false },
-  { id: 5, username: 'camille', bio: 'fashion et design', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200', tuned: true },
-]
+import { followUser, unfollowUser } from '../api'
+import api from '../api'
 
 export default function Search() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const [users, setUsers] = useState(mockUsers)
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(false)
 
-  const filteredUsers = users.filter(user => 
-    user.username.toLowerCase().includes(query.toLowerCase()) ||
-    user.bio.toLowerCase().includes(query.toLowerCase())
-  )
+  const searchUsers = async (q) => {
+    if (!q.trim()) {
+      setUsers([])
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await api.get(`/users/search?q=${q}`)
+      setUsers(res.data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  const handleTune = (userId) => {
-    setUsers(users.map(user => {
-      if (user.id === userId) {
-        return { ...user, tuned: !user.tuned }
+  useEffect(() => {
+    const timer = setTimeout(() => searchUsers(query), 300)
+    return () => clearTimeout(timer)
+  }, [query])
+
+  const handleTune = async (username, isFollowing) => {
+    try {
+      if (isFollowing) {
+        await unfollowUser(username)
+      } else {
+        await followUser(username)
       }
-      return user
-    }))
+      setUsers(users.map(user => {
+        if (user.username === username) {
+          return { ...user, is_following: !isFollowing }
+        }
+        return user
+      }))
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   return (
@@ -40,23 +60,24 @@ export default function Search() {
       </div>
 
       <div className="search-results">
-        {filteredUsers.map(user => (
+        {loading && <p className="loading-text">searching...</p>}
+        {users.map(user => (
           <div key={user.id} className="search-user">
             <img 
-              src={user.avatar} 
+              src={user.avatar || 'https://via.placeholder.com/48'} 
               alt={user.username} 
               className="search-avatar"
               onClick={() => navigate(`/profile/${user.username}`)}
             />
             <div className="search-user-info" onClick={() => navigate(`/profile/${user.username}`)}>
               <span className="search-username">{user.username}</span>
-              <span className="search-bio">{user.bio}</span>
+              <span className="search-bio">{user.bio || 'no bio'}</span>
             </div>
             <button 
-              className={`tune-button ${user.tuned ? 'tuned' : ''}`}
-              onClick={() => handleTune(user.id)}
+              className={`tune-button ${user.is_following ? 'tuned' : ''}`}
+              onClick={() => handleTune(user.username, user.is_following)}
             >
-              {user.tuned ? 'tuned' : 'tune in'}
+              {user.is_following ? 'tuned' : 'tune in'}
             </button>
           </div>
         ))}
