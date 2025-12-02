@@ -27,3 +27,25 @@ class UserOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Rec
+class RecCreate(BaseModel):
+    category: str
+    title: str
+    description: str = ""
+    link: str = ""
+    image: str = ""
+
+class RecOut(BaseModel):
+    id: int
+    user_id: int
+    category: str
+    title: str
+    description: str
+    link: str
+    image: str
+    created_at: datetime
+    username: str | None = None
+
+    class Config:
+        from_attributes = True
