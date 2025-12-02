@@ -9,7 +9,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
-    password = Column(String(255), nullable=False)  hashé, jamais en clair
+    password = Column(String(255), nullable=False)  
     bio = Column(Text, default="")
     avatar = Column(String(255), default="")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -39,8 +39,8 @@ class Follow(Base):
     __tablename__ = "follows"
     
     id = Column(Integer, primary_key=True, index=True)
-    follower_id = Column(Integer, ForeignKey("users.id"), nullable=False)  celui qui follow
-    following_id = Column(Integer, ForeignKey("users.id"), nullable=False)  celui qui est suivi
+    follower_id = Column(Integer, ForeignKey("users.id"), nullable=False)  
+    following_id = Column(Integer, ForeignKey("users.id"), nullable=False) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
