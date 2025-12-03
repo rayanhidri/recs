@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createRec } from '../api'
 
@@ -10,6 +10,7 @@ export default function Create() {
   const [customCategory, setCustomCategory] = useState('')
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [fetchingPreview, setFetchingPreview] = useState(false)
   const [form, setForm] = useState({
     category: 'music',
     title: '',
@@ -17,6 +18,39 @@ export default function Create() {
     link: '',
     image: ''
   })
+
+  // Auto-fetch link preview
+  const fetchLinkPreview = async (url) => {
+    if (!url.startsWith('http')) return
+    setFetchingPreview(true)
+    try {
+      const res = await fetch(`https://api.microlink.io?url=${encodeURIComponent(url)}`)
+      const data = await res.json()
+      if (data.status === 'success') {
+        const { title, image } = data.data
+        setForm(prev => ({
+          ...prev,
+          title: prev.title || title || '',
+          image: prev.image || image?.url || ''
+        }))
+      }
+    } catch (err) {
+      console.error('Failed to fetch preview:', err)
+    } finally {
+      setFetchingPreview(false)
+    }
+  }
+
+  const handleLinkChange = (e) => {
+    const url = e.target.value
+    setForm({ ...form, link: url })
+  }
+
+  const handleLinkBlur = () => {
+    if (form.link && !form.image) {
+      fetchLinkPreview(form.link)
+    }
+  }
 
   const handleAddCategory = () => {
     if (customCategory.trim() && !categories.includes(customCategory.toLowerCase())) {
@@ -83,6 +117,18 @@ export default function Create() {
         </div>
 
         <div className="form-group">
+          <label>link</label>
+          <input
+            type="url"
+            placeholder="https://..."
+            value={form.link}
+            onChange={handleLinkChange}
+            onBlur={handleLinkBlur}
+          />
+          {fetchingPreview && <span className="fetching-text">fetching preview...</span>}
+        </div>
+
+        <div className="form-group">
           <label>title</label>
           <input
             type="text"
@@ -104,23 +150,16 @@ export default function Create() {
         </div>
 
         <div className="form-group">
-          <label>link</label>
+          <label>image url {form.image && '✓'}</label>
           <input
             type="url"
-            placeholder="https://..."
-            value={form.link}
-            onChange={(e) => setForm({...form, link: e.target.value})}
-          />
-        </div>
-
-        <div className="form-group">
-          <label>image url</label>
-          <input
-            type="url"
-            placeholder="https://image-url..."
+            placeholder="auto-filled from link or paste your own..."
             value={form.image}
             onChange={(e) => setForm({...form, image: e.target.value})}
           />
+          {form.image && (
+            <img src={form.image} alt="preview" className="image-preview" />
+          )}
         </div>
 
         <button type="submit" className="submit-button" disabled={loading}>
