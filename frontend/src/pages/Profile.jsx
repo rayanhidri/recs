@@ -131,24 +131,36 @@ export default function Profile() {
           </button>
         )}
       </div>
-
       <div className="profile-recs">
-        {recs.length === 0 ? (
-          <p className="no-recs">no recs yet</p>
-        ) : (
-          recs.map(rec => (
-            <div key={rec.id} className="profile-rec">
-              {rec.image && (
-                <img src={rec.image} alt={rec.title} className="profile-rec-image" />
-              )}
-              <div className="profile-rec-info">
-                <span className="profile-rec-type">{rec.category}</span>
-                <h3 className="profile-rec-title">{rec.title}</h3>
-              </div>
-            </div>
-          ))
+  {recs.length === 0 ? (
+    <p className="no-recs">no recs yet</p>
+  ) : (
+    recs.map(rec => (
+      <div key={rec.id} className="profile-rec">
+        {rec.image && (
+          <img 
+            src={rec.image} 
+            alt={rec.title} 
+            className="profile-rec-image clickable"
+            onClick={() => rec.link && window.open(rec.link, '_blank')}
+          />
         )}
+        <div className="profile-rec-info">
+          <span className="profile-rec-type">{rec.category}</span>
+          <h3 className="profile-rec-title">{rec.title}</h3>
+          {rec.description && <p className="profile-rec-desc">{rec.description}</p>}
+          {rec.link && (
+            <a href={rec.link} target="_blank" rel="noopener noreferrer" className="profile-rec-link">
+              open link ↗
+            </a>
+          )}
+        </div>
       </div>
+    ))
+  )}
+</div>
+
+      
     </div>
   )
 }
