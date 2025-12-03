@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from ..database import get_db
 from ..models import User, Follow, Rec
-from ..schemas import UserProfile
+from ..schemas import UserProfile, UserUpdate
 from ..auth import get_current_user_id
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -11,6 +11,33 @@ router = APIRouter(prefix="/users", tags=["users"])
 @router.get("/me", response_model=UserProfile)
 def get_current_user(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
     user = db.query(User).filter(User.id == current_user_id).first()
+    
+    recs_count = db.query(func.count(Rec.id)).filter(Rec.user_id == user.id).scalar()
+    tuned_in = db.query(func.count(Follow.id)).filter(Follow.following_id == user.id).scalar()
+    tuned_to = db.query(func.count(Follow.id)).filter(Follow.follower_id == user.id).scalar()
+    
+    return UserProfile(
+        id=user.id,
+        username=user.username,
+        bio=user.bio,
+        avatar=user.avatar,
+        recs_count=recs_count,
+        tuned_in=tuned_in,
+        tuned_to=tuned_to,
+        is_following=False
+    )
+
+@router.patch("/me", response_model=UserProfile)
+def update_current_user(updates: UserUpdate, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    user = db.query(User).filter(User.id == current_user_id).first()
+    
+    if updates.bio is not None:
+        user.bio = updates.bio
+    if updates.avatar is not None:
+        user.avatar = updates.avatar
+    
+    db.commit()
+    db.refresh(user)
     
     recs_count = db.query(func.count(Rec.id)).filter(Rec.user_id == user.id).scalar()
     tuned_in = db.query(func.count(Follow.id)).filter(Follow.following_id == user.id).scalar()

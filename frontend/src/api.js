@@ -36,6 +36,9 @@ export const getMe = () => api.get('/users/me')
 export const getUser = (username) => api.get(`/users/${username}`)
 export const followUser = (username) => api.post(`/users/${username}/follow`)
 export const unfollowUser = (username) => api.delete(`/users/${username}/follow`)
+export const updateMe = (data) => api.patch('/users/me', data)
+
+
 
 // Recs
 export const createRec = (data) => api.post('/recs/', data)
@@ -45,3 +48,4 @@ export const likeRec = (recId) => api.post(`/recs/${recId}/like`)
 export const unlikeRec = (recId) => api.delete(`/recs/${recId}/like`)
 
 export default api
+

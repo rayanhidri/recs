@@ -69,3 +69,7 @@ class UserProfile(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserUpdate(BaseModel):
+    bio: str | None = None
+    avatar: str | None = None
