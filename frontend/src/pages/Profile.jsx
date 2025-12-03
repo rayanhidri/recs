@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { getMe, getUser, getUserRecs, followUser, unfollowUser } from '../api'
+import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe } from '../api'
 import { useAuth } from '../context/AuthContext'
 
 export default function Profile() {
@@ -9,6 +9,9 @@ export default function Profile() {
   const [user, setUser] = useState(null)
   const [recs, setRecs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editing, setEditing] = useState(false)
+  const [bio, setBio] = useState('')
+  const [avatar, setAvatar] = useState('')
 
   const isOwnProfile = !username || username === currentUser?.username
 
@@ -19,6 +22,8 @@ export default function Profile() {
           ? await getMe() 
           : await getUser(username)
         setUser(userRes.data)
+        setBio(userRes.data.bio || '')
+        setAvatar(userRes.data.avatar || '')
 
         const recsRes = await getUserRecs(userRes.data.username)
         setRecs(recsRes.data)
@@ -45,6 +50,16 @@ export default function Profile() {
     }
   }
 
+  const handleSave = async () => {
+    try {
+      const res = await updateMe({ bio, avatar })
+      setUser(res.data)
+      setEditing(false)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   if (loading) return <div className="loading">loading...</div>
   if (!user) return <div className="loading">user not found</div>
 
@@ -52,15 +67,36 @@ export default function Profile() {
     <div className="profile">
       <div className="profile-header">
         <div className="avatar-container">
-          <img 
-            src={user.avatar || 'https://via.placeholder.com/100'} 
-            alt={user.username} 
-            className="profile-avatar" 
-          />
+          {editing ? (
+            <input
+              type="url"
+              placeholder="avatar url..."
+              value={avatar}
+              onChange={(e) => setAvatar(e.target.value)}
+              className="edit-input"
+            />
+          ) : (
+            <img 
+              src={user.avatar || 'https://via.placeholder.com/100'} 
+              alt={user.username} 
+              className="profile-avatar" 
+            />
+          )}
         </div>
         
         <h2 className="profile-username">{user.username}</h2>
-        <p className="profile-bio">{user.bio || 'no bio yet'}</p>
+        
+        {editing ? (
+          <textarea
+            placeholder="write your bio..."
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            className="edit-bio"
+            rows={3}
+          />
+        ) : (
+          <p className="profile-bio">{user.bio || 'no bio yet'}</p>
+        )}
         
         <div className="profile-stats">
           <div className="stat">
@@ -77,7 +113,16 @@ export default function Profile() {
           </div>
         </div>
 
-        {!isOwnProfile && (
+        {isOwnProfile ? (
+          editing ? (
+            <div className="edit-buttons">
+              <button className="save-button" onClick={handleSave}>save</button>
+              <button className="cancel-button" onClick={() => setEditing(false)}>cancel</button>
+            </div>
+          ) : (
+            <button className="edit-button" onClick={() => setEditing(true)}>edit profile</button>
+          )
+        ) : (
           <button 
             className={`tune-button ${user.is_following ? 'tuned' : ''}`}
             onClick={handleFollow}
