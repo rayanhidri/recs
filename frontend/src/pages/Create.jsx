@@ -10,6 +10,32 @@ export default function Create() {
   const [customCategory, setCustomCategory] = useState('')
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+const handleRecImageUpload = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  setUploadingImage(true)
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', 'recs_unsigned')
+  formData.append('cloud_name', 'dzbhkicv0')
+
+  try {
+    const res = await fetch('https://api.cloudinary.com/v1_1/dzbhkicv0/image/upload', {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    setForm({ ...form, image: data.secure_url })
+  } catch (err) {
+    console.error('Upload failed:', err)
+    alert('upload failed')
+  } finally {
+    setUploadingImage(false)
+  }
+}
   const [fetchingPreview, setFetchingPreview] = useState(false)
   const [form, setForm] = useState({
     category: 'music',
@@ -150,17 +176,31 @@ export default function Create() {
         </div>
 
         <div className="form-group">
-          <label>image url {form.image && '✓'}</label>
-          <input
-            type="url"
-            placeholder="auto-filled from link or paste your own..."
-            value={form.image}
-            onChange={(e) => setForm({...form, image: e.target.value})}
-          />
-          {form.image && (
-            <img src={form.image} alt="preview" className="image-preview" />
-          )}
-        </div>
+  <label>image {form.image && '✓'}</label>
+  <div className="image-upload-options">
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handleRecImageUpload}
+      className="file-input"
+      id="rec-image-upload"
+    />
+    <label htmlFor="rec-image-upload" className="upload-button">
+      {uploadingImage ? 'uploading...' : 'upload image'}
+    </label>
+    <span className="or-divider">or</span>
+    <input
+      type="url"
+      placeholder="paste image url..."
+      value={form.image}
+      onChange={(e) => setForm({...form, image: e.target.value})}
+      className="url-input"
+    />
+  </div>
+  {form.image && (
+    <img src={form.image} alt="preview" className="image-preview" />
+  )}
+</div>
 
         <button type="submit" className="submit-button" disabled={loading}>
           {loading ? 'posting...' : 'post rec'}
