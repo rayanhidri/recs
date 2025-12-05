@@ -12,6 +12,11 @@ router = APIRouter(prefix="/recs", tags=["recs"])
 def get_rec_with_details(rec, username, db, user_id):
     likes_count = db.query(func.count(Like.id)).filter(Like.rec_id == rec.id).scalar()
     is_liked = db.query(Like).filter(Like.user_id == user_id, Like.rec_id == rec.id).first() is not None
+    user = db.query(User).filter(User.username == username).first()
+    user_avatar = user.avatar if user else ""
+    return RecOut(**rec.__dict__, username=username, likes_count=likes_count, is_liked=is_liked, user_avatar=user_avatar)
+    likes_count = db.query(func.count(Like.id)).filter(Like.rec_id == rec.id).scalar()
+    is_liked = db.query(Like).filter(Like.user_id == user_id, Like.rec_id == rec.id).first() is not None
     return RecOut(**rec.__dict__, username=username, likes_count=likes_count, is_liked=is_liked)
 
 @router.post("/", response_model=RecOut)

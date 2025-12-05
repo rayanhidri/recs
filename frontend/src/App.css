@@ -859,3 +859,130 @@ body {
 .upload-button:hover {
   background: #e0e0e0;
 }
+/* New Feed Styles */
+.feed {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.post {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.post-user {
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.post-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.post-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.post-username {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.post-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-category {
+  background: #f0f0f0;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  color: #555;
+}
+
+.post-time {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.post-thumbnail {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.post-content {
+  margin-bottom: 12px;
+}
+
+.post-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+}
+
+.post-description {
+  font-size: 0.9rem;
+  color: #444;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+}
+
+.post-domain {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.post-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.post-open {
+  font-size: 0.85rem;
+  color: #111;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.post-open:hover {
+  text-decoration: underline;
+}
+
+.post-like {
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  color: #666;
+}
+
+.post-like.liked {
+  color: #e74c3c;
+}

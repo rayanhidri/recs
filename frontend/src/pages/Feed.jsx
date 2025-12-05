@@ -1,36 +1,76 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getFeed, likeRec, unlikeRec } from '../api'
 
-function Post({ post, onLike }) {
+function timeAgo(dateString) {
+  const now = new Date()
+  const date = new Date(dateString)
+  const seconds = Math.floor((now - date) / 1000)
+  
+  if (seconds < 60) return 'now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d`
+  const weeks = Math.floor(days / 7)
+  return `${weeks}w`
+}
+
+function getDomain(url) {
+  try {
+    return new URL(url).hostname.replace('www.', '')
+  } catch {
+    return ''
+  }
+}
+
+function Post({ post, onLike, onNavigate }) {
   return (
     <article className="post">
       <div className="post-header">
-        <span className="username">{post.username}</span>
-        <span className="media-type">{post.category}</span>
-      </div>
-      
-      {post.image && (
-        <div className="post-image-container">
-          <img src={post.image} alt={post.title} className="post-image" />
+        <div className="post-user" onClick={() => onNavigate(`/profile/${post.username}`)}>
+          <img 
+            src={post.user_avatar || 'https://via.placeholder.com/40'} 
+            alt={post.username} 
+            className="post-avatar"
+          />
+          <div className="post-user-info">
+            <span className="post-username">{post.username}</span>
+            <div className="post-meta">
+              <span className="post-category">{post.category}</span>
+              <span className="post-time">{timeAgo(post.created_at)}</span>
+            </div>
+          </div>
         </div>
-      )}
-      
-      <div className="post-content">
-        <h2 className="post-title">{post.title}</h2>
-        <p className="post-comment">{post.description}</p>
-        {post.link && (
-          <a href={post.link} target="_blank" rel="noopener noreferrer" className="post-link">
-            open link ↗
-          </a>
+        {post.image && (
+          <img 
+            src={post.image} 
+            alt={post.title} 
+            className="post-thumbnail"
+            onClick={() => post.link && window.open(post.link, '_blank')}
+          />
         )}
       </div>
       
-      <div className="post-actions">
+      <div className="post-content">
+        <h2 className="post-title">{post.title}</h2>
+        {post.description && <p className="post-description">{post.description}</p>}
+        {post.link && <span className="post-domain">{getDomain(post.link)}</span>}
+      </div>
+      
+      <div className="post-footer">
+        {post.link && (
+          <a href={post.link} target="_blank" rel="noopener noreferrer" className="post-open">
+            ▶ open
+          </a>
+        )}
         <button 
-          className={`like-button ${post.is_liked ? 'liked' : ''}`}
+          className={`post-like ${post.is_liked ? 'liked' : ''}`}
           onClick={() => onLike(post.id, post.is_liked)}
         >
-          {post.is_liked ? '♥' : '♡'} {post.likes_count}
+          {post.is_liked ? '♥' : '♡'} {post.likes_count > 0 && post.likes_count}
         </button>
       </div>
     </article>
@@ -38,6 +78,7 @@ function Post({ post, onLike }) {
 }
 
 export default function Feed() {
+  const navigate = useNavigate()
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -84,7 +125,7 @@ export default function Feed() {
   return (
     <main className="feed">
       {posts.map(post => (
-        <Post key={post.id} post={post} onLike={handleLike} />
+        <Post key={post.id} post={post} onLike={handleLike} onNavigate={navigate} />
       ))}
     </main>
   )

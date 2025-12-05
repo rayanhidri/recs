@@ -73,3 +73,20 @@ class UserProfile(BaseModel):
 class UserUpdate(BaseModel):
     bio: str | None = None
     avatar: str | None = None
+    
+class RecOut(BaseModel):
+    id: int
+    user_id: int
+    category: str
+    title: str
+    description: str
+    link: str
+    image: str
+    created_at: datetime
+    username: str | None = None
+    likes_count: int = 0
+    is_liked: bool = False
+    user_avatar: str = ""
+
+    class Config:
+        from_attributes = True
