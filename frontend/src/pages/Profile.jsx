@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe } from '../api'
+import { useParams, useNavigate } from 'react-router-dom'
+import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing } from '../api'
 import { useAuth } from '../context/AuthContext'
 
 export default function Profile() {
   const { username } = useParams()
+  const navigate = useNavigate()
   const { user: currentUser } = useAuth()
   const [user, setUser] = useState(null)
   const [recs, setRecs] = useState([])
@@ -12,6 +13,9 @@ export default function Profile() {
   const [editing, setEditing] = useState(false)
   const [bio, setBio] = useState('')
   const [avatar, setAvatar] = useState('')
+  const [showModal, setShowModal] = useState(null) // 'followers' or 'following'
+  const [modalUsers, setModalUsers] = useState([])
+  const [loadingModal, setLoadingModal] = useState(false)
 
   const isOwnProfile = !username || username === currentUser?.username
 
@@ -60,6 +64,26 @@ export default function Profile() {
     }
   }
 
+  const openModal = async (type) => {
+    setShowModal(type)
+    setLoadingModal(true)
+    try {
+      const res = type === 'followers' 
+        ? await getFollowers(user.username)
+        : await getFollowing(user.username)
+      setModalUsers(res.data)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingModal(false)
+    }
+  }
+
+  const closeModal = () => {
+    setShowModal(null)
+    setModalUsers([])
+  }
+
   if (loading) return <div className="loading">loading...</div>
   if (!user) return <div className="loading">user not found</div>
 
@@ -103,11 +127,11 @@ export default function Profile() {
             <span className="stat-number">{user.recs_count}</span>
             <span className="stat-label">recs</span>
           </div>
-          <div className="stat">
+          <div className="stat clickable" onClick={() => openModal('followers')}>
             <span className="stat-number">{user.tuned_in}</span>
             <span className="stat-label">tuned in</span>
           </div>
-          <div className="stat">
+          <div className="stat clickable" onClick={() => openModal('following')}>
             <span className="stat-number">{user.tuned_to}</span>
             <span className="stat-label">tuned to</span>
           </div>
@@ -131,36 +155,64 @@ export default function Profile() {
           </button>
         )}
       </div>
-      <div className="profile-recs">
-  {recs.length === 0 ? (
-    <p className="no-recs">no recs yet</p>
-  ) : (
-    recs.map(rec => (
-      <div key={rec.id} className="profile-rec">
-        {rec.image && (
-          <img 
-            src={rec.image} 
-            alt={rec.title} 
-            className="profile-rec-image clickable"
-            onClick={() => rec.link && window.open(rec.link, '_blank')}
-          />
-        )}
-        <div className="profile-rec-info">
-          <span className="profile-rec-type">{rec.category}</span>
-          <h3 className="profile-rec-title">{rec.title}</h3>
-          {rec.description && <p className="profile-rec-desc">{rec.description}</p>}
-          {rec.link && (
-            <a href={rec.link} target="_blank" rel="noopener noreferrer" className="profile-rec-link">
-              open link ↗
-            </a>
-          )}
-        </div>
-      </div>
-    ))
-  )}
-</div>
 
-      
+      <div className="profile-recs">
+        {recs.length === 0 ? (
+          <p className="no-recs">no recs yet</p>
+        ) : (
+          recs.map(rec => (
+            <div key={rec.id} className="profile-rec">
+              {rec.image && (
+                <img 
+                  src={rec.image} 
+                  alt={rec.title} 
+                  className="profile-rec-image clickable"
+                  onClick={() => rec.link && window.open(rec.link, '_blank')}
+                />
+              )}
+              <div className="profile-rec-info">
+                <span className="profile-rec-type">{rec.category}</span>
+                <h3 className="profile-rec-title">{rec.title}</h3>
+                {rec.description && <p className="profile-rec-desc">{rec.description}</p>}
+                {rec.link && (
+                  <a href={rec.link} target="_blank" rel="noopener noreferrer" className="profile-rec-link">
+                    open link ↗
+                  </a>
+                )}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Modal for followers/following */}
+      {showModal && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{showModal === 'followers' ? 'tuned in' : 'tuned to'}</h3>
+              <button className="modal-close" onClick={closeModal}>×</button>
+            </div>
+            <div className="modal-content">
+              {loadingModal ? (
+                <p>loading...</p>
+              ) : modalUsers.length === 0 ? (
+                <p className="empty-modal">no one yet</p>
+              ) : (
+                modalUsers.map(u => (
+                  <div key={u.id} className="modal-user" onClick={() => { closeModal(); navigate(`/profile/${u.username}`); }}>
+                    <img src={u.avatar || 'https://via.placeholder.com/40'} alt={u.username} className="modal-avatar" />
+                    <div className="modal-user-info">
+                      <span className="modal-username">{u.username}</span>
+                      <span className="modal-bio">{u.bio || 'no bio'}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -76,6 +76,59 @@ def search_users(q: str, db: Session = Depends(get_db), current_user_id: int = D
             is_following=is_following
         ))
     return results
+@router.get("/{username}/followers", response_model=list[UserProfile])
+def get_followers(username: str, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    followers = db.query(User).join(Follow, Follow.follower_id == User.id).filter(Follow.following_id == user.id).all()
+    
+    results = []
+    for follower in followers:
+        recs_count = db.query(func.count(Rec.id)).filter(Rec.user_id == follower.id).scalar()
+        tuned_in = db.query(func.count(Follow.id)).filter(Follow.following_id == follower.id).scalar()
+        tuned_to = db.query(func.count(Follow.id)).filter(Follow.follower_id == follower.id).scalar()
+        is_following = db.query(Follow).filter(Follow.follower_id == current_user_id, Follow.following_id == follower.id).first() is not None
+        
+        results.append(UserProfile(
+            id=follower.id,
+            username=follower.username,
+            bio=follower.bio,
+            avatar=follower.avatar,
+            recs_count=recs_count,
+            tuned_in=tuned_in,
+            tuned_to=tuned_to,
+            is_following=is_following
+        ))
+    return results
+
+@router.get("/{username}/following", response_model=list[UserProfile])
+def get_following(username: str, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    following = db.query(User).join(Follow, Follow.following_id == User.id).filter(Follow.follower_id == user.id).all()
+    
+    results = []
+    for followed in following:
+        recs_count = db.query(func.count(Rec.id)).filter(Rec.user_id == followed.id).scalar()
+        tuned_in = db.query(func.count(Follow.id)).filter(Follow.following_id == followed.id).scalar()
+        tuned_to = db.query(func.count(Follow.id)).filter(Follow.follower_id == followed.id).scalar()
+        is_following = db.query(Follow).filter(Follow.follower_id == current_user_id, Follow.following_id == followed.id).first() is not None
+        
+        results.append(UserProfile(
+            id=followed.id,
+            username=followed.username,
+            bio=followed.bio,
+            avatar=followed.avatar,
+            recs_count=recs_count,
+            tuned_in=tuned_in,
+            tuned_to=tuned_to,
+            is_following=is_following
+        ))
+    return results
 
 @router.get("/{username}", response_model=UserProfile)
 def get_user_profile(username: str, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
@@ -130,3 +183,4 @@ def unfollow_user(username: str, db: Session = Depends(get_db), current_user_id:
     db.delete(follow)
     db.commit()
     return {"message": f"Unfollowed {username}"}
+

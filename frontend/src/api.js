@@ -37,6 +37,9 @@ export const getUser = (username) => api.get(`/users/${username}`)
 export const followUser = (username) => api.post(`/users/${username}/follow`)
 export const unfollowUser = (username) => api.delete(`/users/${username}/follow`)
 export const updateMe = (data) => api.patch('/users/me', data)
+export const getFollowers = (username) => api.get(`/users/${username}/followers`)
+export const getFollowing = (username) => api.get(`/users/${username}/following`)
+
 
 
 
