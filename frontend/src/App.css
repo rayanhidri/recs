@@ -837,3 +837,25 @@ body {
   color: #888;
   padding: 24px;
 }
+.avatar-edit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-button {
+  padding: 8px 16px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.upload-button:hover {
+  background: #e0e0e0;
+}

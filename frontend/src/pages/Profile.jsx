@@ -40,6 +40,33 @@ export default function Profile() {
     fetchData()
   }, [username, isOwnProfile])
 
+  const [uploading, setUploading] = useState(false)
+
+const handleImageUpload = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+
+  setUploading(true)
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', 'recs_unsigned')
+  formData.append('cloud_name', 'dzbhkicv0')
+
+  try {
+    const res = await fetch('https://api.cloudinary.com/v1_1/dzbhkicv0/image/upload', {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    setAvatar(data.secure_url)
+  } catch (err) {
+    console.error('Upload failed:', err)
+    alert('upload failed')
+  } finally {
+    setUploading(false)
+  }
+}
+
   const handleFollow = async () => {
     try {
       if (user.is_following) {
@@ -91,15 +118,25 @@ export default function Profile() {
     <div className="profile">
       <div className="profile-header">
         <div className="avatar-container">
-          {editing ? (
-            <input
-              type="url"
-              placeholder="avatar url..."
-              value={avatar}
-              onChange={(e) => setAvatar(e.target.value)}
-              className="edit-input"
-            />
-          ) : (
+        {editing ? (
+  <div className="avatar-edit">
+    <img 
+      src={avatar || 'https://via.placeholder.com/100'} 
+      alt="preview" 
+      className="profile-avatar"
+    />
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handleImageUpload}
+      className="file-input"
+      id="avatar-upload"
+    />
+    <label htmlFor="avatar-upload" className="upload-button">
+      {uploading ? 'uploading...' : 'choose photo'}
+    </label>
+  </div>
+) : (
             <img 
               src={user.avatar || 'https://via.placeholder.com/100'} 
               alt={user.username} 
