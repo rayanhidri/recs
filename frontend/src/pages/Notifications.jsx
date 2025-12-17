@@ -28,7 +28,6 @@ export default function Notifications() {
       try {
         const res = await getNotifications()
         setNotifications(res.data)
-        // Mark all as read when viewing
         await markNotificationsRead()
       } catch (err) {
         console.error(err)
@@ -52,6 +51,15 @@ export default function Notifications() {
     }
   }
 
+  const handleClick = (notif) => {
+    if (notif.type === 'follow') {
+      navigate(`/profile/${notif.from_username}`)
+    } else if (notif.rec_id) {
+      // For likes and comments, go to the feed (we can add a single rec view later)
+      navigate(`/`)
+    }
+  }
+
   if (loading) return <div className="loading">loading...</div>
 
   return (
@@ -66,7 +74,7 @@ export default function Notifications() {
             <div 
               key={notif.id} 
               className={`notification-item ${!notif.is_read ? 'unread' : ''}`}
-              onClick={() => navigate(`/profile/${notif.from_username}`)}
+              onClick={() => handleClick(notif)}
             >
               <img 
                 src={notif.from_user_avatar || 'https://via.placeholder.com/40'} 

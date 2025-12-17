@@ -27,18 +27,16 @@ function getDomain(url) {
 }
 
 function Post({ post, onLike, onNavigate }) {
-  const [showComments, setShowComments] = useState(false)
   const [comments, setComments] = useState([])
   const [newComment, setNewComment] = useState('')
-  const [loadingComments, setLoadingComments] = useState(false)
-  const [commentsCount, setCommentsCount] = useState(post.comments_count || 0)
+  const [loadingComments, setLoadingComments] = useState(true)
 
   const hasLinkWithImage = post.link && post.image
   const hasImageOnly = post.image && !post.link
 
-  const toggleComments = async () => {
-    if (!showComments) {
-      setLoadingComments(true)
+  // Fetch comments automatically on mount
+  useEffect(() => {
+    const fetchComments = async () => {
       try {
         const res = await getComments(post.id)
         setComments(res.data)
@@ -48,8 +46,8 @@ function Post({ post, onLike, onNavigate }) {
         setLoadingComments(false)
       }
     }
-    setShowComments(!showComments)
-  }
+    fetchComments()
+  }, [post.id])
 
   const handleAddComment = async (e) => {
     e.preventDefault()
@@ -58,7 +56,6 @@ function Post({ post, onLike, onNavigate }) {
     try {
       const res = await createComment(post.id, newComment)
       setComments([...comments, res.data])
-      setCommentsCount(commentsCount + 1)
       setNewComment('')
     } catch (err) {
       console.error(err)
@@ -107,65 +104,57 @@ function Post({ post, onLike, onNavigate }) {
       <div className="post-footer">
         {post.link && (
           <a href={post.link} target="_blank" rel="noopener noreferrer" className="post-open">
-            ▶ open
+            open link
           </a>
         )}
-        <div className="post-actions">
-          <button className="post-comment-btn" onClick={toggleComments}>
-            💬 {commentsCount > 0 && commentsCount}
-          </button>
-          <button 
-            className={`post-like ${post.is_liked ? 'liked' : ''}`}
-            onClick={() => onLike(post.id, post.is_liked)}
-          >
-            {post.is_liked ? '♥' : '♡'} {post.likes_count > 0 && post.likes_count}
-          </button>
-        </div>
+        <button 
+          className={`post-like ${post.is_liked ? 'liked' : ''}`}
+          onClick={() => onLike(post.id, post.is_liked)}
+        >
+          {post.is_liked ? '♥' : '♡'} {post.likes_count > 0 && post.likes_count}
+        </button>
       </div>
 
-      {showComments && (
-        <div className="comments-section">
-          {loadingComments ? (
-            <p className="comments-loading">loading...</p>
-          ) : (
-            <>
-              {comments.length === 0 ? (
-                <p className="no-comments">no comments yet</p>
-              ) : (
-                <div className="comments-list">
-                  {comments.map(comment => (
-                    <div key={comment.id} className="comment">
-                      <img 
-                        src={comment.user_avatar || 'https://via.placeholder.com/28'} 
-                        alt={comment.username}
-                        className="comment-avatar"
-                        onClick={() => onNavigate(`/profile/${comment.username}`)}
-                      />
-                      <div className="comment-body">
-                        <span className="comment-username" onClick={() => onNavigate(`/profile/${comment.username}`)}>
-                          {comment.username}
-                        </span>
-                        <span className="comment-content">{comment.content}</span>
-                        <span className="comment-time">{timeAgo(comment.created_at)}</span>
-                      </div>
+      {/* Comments section - always visible */}
+      <div className="comments-section">
+        {loadingComments ? (
+          <p className="comments-loading">loading comments...</p>
+        ) : (
+          <>
+            {comments.length > 0 && (
+              <div className="comments-list">
+                {comments.map(comment => (
+                  <div key={comment.id} className="comment">
+                    <img 
+                      src={comment.user_avatar || 'https://via.placeholder.com/28'} 
+                      alt={comment.username}
+                      className="comment-avatar"
+                      onClick={() => onNavigate(`/profile/${comment.username}`)}
+                    />
+                    <div className="comment-body">
+                      <span className="comment-username" onClick={() => onNavigate(`/profile/${comment.username}`)}>
+                        {comment.username}
+                      </span>
+                      <span className="comment-content">{comment.content}</span>
+                      <span className="comment-time">{timeAgo(comment.created_at)}</span>
                     </div>
-                  ))}
-                </div>
-              )}
-              <form onSubmit={handleAddComment} className="comment-form">
-                <input
-                  type="text"
-                  placeholder="add a comment..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="comment-input"
-                />
-                <button type="submit" className="comment-submit">post</button>
-              </form>
-            </>
-          )}
-        </div>
-      )}
+                  </div>
+                ))}
+              </div>
+            )}
+            <form onSubmit={handleAddComment} className="comment-form">
+              <input
+                type="text"
+                placeholder="add a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="comment-input"
+              />
+              <button type="submit" className="comment-submit">post</button>
+            </form>
+          </>
+        )}
+      </div>
     </article>
   )
 }

@@ -60,4 +60,6 @@ export const createComment = (recId, content) => api.post(`/recs/${recId}/commen
 export const getNotifications = () => api.get('/notifications/')
 export const markNotificationsRead = () => api.post('/notifications/read')
 
+//Delete
+export const deleteRec = (recId) => api.delete(`/recs/${recId}`)
 

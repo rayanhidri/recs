@@ -27,15 +27,13 @@ def create_rec(rec: RecCreate, db: Session = Depends(get_db), user_id: int = Dep
     return get_rec_with_details(new_rec, user.username, db, user_id)
 
 @router.get("/feed", response_model=List[RecOut])
-def get_feed(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id), skip: int = 0, limit: int = 20):
+def get_feed(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id), skip: int = 0, limit: int = 50):
     following_ids = db.query(Follow.following_id).filter(Follow.follower_id == user_id).subquery()
-    
     recs = db.query(Rec, User.username).join(User).filter(
-        Rec.user_id.in_(following_ids)
+        (Rec.user_id.in_(following_ids)) | (Rec.user_id == user_id)
     ).order_by(desc(Rec.created_at)).offset(skip).limit(limit).all()
     
     return [get_rec_with_details(rec, username, db, user_id) for rec, username in recs]
-
 @router.get("/user/{username}", response_model=List[RecOut])
 def get_user_recs(username: str, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id), skip: int = 0, limit: int = 20):
     user = db.query(User).filter(User.username == username).first()
@@ -131,3 +129,19 @@ def create_comment(rec_id: int, comment: CommentCreate, db: Session = Depends(ge
         username=user.username,
         user_avatar=user.avatar or ""
     )
+@router.delete("/{rec_id}")
+def delete_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    rec = db.query(Rec).filter(Rec.id == rec_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Rec not found")
+    if rec.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not your rec")
+    
+    # Delete related likes, comments, notifications first
+    db.query(Like).filter(Like.rec_id == rec_id).delete()
+    db.query(Comment).filter(Comment.rec_id == rec_id).delete()
+    db.query(Notification).filter(Notification.rec_id == rec_id).delete()
+    
+    db.delete(rec)
+    db.commit()
+    return {"message": "Rec deleted"}

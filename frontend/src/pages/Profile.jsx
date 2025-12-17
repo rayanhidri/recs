@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing } from '../api'
+import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing, deleteRec } from '../api'
 import { useAuth } from '../context/AuthContext'
 
 export default function Profile() {
@@ -13,9 +13,10 @@ export default function Profile() {
   const [editing, setEditing] = useState(false)
   const [bio, setBio] = useState('')
   const [avatar, setAvatar] = useState('')
-  const [showModal, setShowModal] = useState(null) // 'followers' or 'following'
+  const [showModal, setShowModal] = useState(null)
   const [modalUsers, setModalUsers] = useState([])
   const [loadingModal, setLoadingModal] = useState(false)
+  const [uploading, setUploading] = useState(false)
 
   const isOwnProfile = !username || username === currentUser?.username
 
@@ -40,32 +41,30 @@ export default function Profile() {
     fetchData()
   }, [username, isOwnProfile])
 
-  const [uploading, setUploading] = useState(false)
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
 
-const handleImageUpload = async (e) => {
-  const file = e.target.files[0]
-  if (!file) return
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', 'recs_unsigned')
+    formData.append('cloud_name', 'dzbhkicv0')
 
-  setUploading(true)
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('upload_preset', 'recs_unsigned')
-  formData.append('cloud_name', 'dzbhkicv0')
-
-  try {
-    const res = await fetch('https://api.cloudinary.com/v1_1/dzbhkicv0/image/upload', {
-      method: 'POST',
-      body: formData
-    })
-    const data = await res.json()
-    setAvatar(data.secure_url)
-  } catch (err) {
-    console.error('Upload failed:', err)
-    alert('upload failed')
-  } finally {
-    setUploading(false)
+    try {
+      const res = await fetch('https://api.cloudinary.com/v1_1/dzbhkicv0/image/upload', {
+        method: 'POST',
+        body: formData
+      })
+      const data = await res.json()
+      setAvatar(data.secure_url)
+    } catch (err) {
+      console.error('Upload failed:', err)
+      alert('upload failed')
+    } finally {
+      setUploading(false)
+    }
   }
-}
 
   const handleFollow = async () => {
     try {
@@ -88,6 +87,18 @@ const handleImageUpload = async (e) => {
       setEditing(false)
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  const handleDeleteRec = async (recId) => {
+    if (window.confirm('delete this rec?')) {
+      try {
+        await deleteRec(recId)
+        setRecs(recs.filter(r => r.id !== recId))
+        setUser({ ...user, recs_count: user.recs_count - 1 })
+      } catch (err) {
+        console.error(err)
+      }
     }
   }
 
@@ -118,25 +129,25 @@ const handleImageUpload = async (e) => {
     <div className="profile">
       <div className="profile-header">
         <div className="avatar-container">
-        {editing ? (
-  <div className="avatar-edit">
-    <img 
-      src={avatar || 'https://via.placeholder.com/100'} 
-      alt="preview" 
-      className="profile-avatar"
-    />
-    <input
-      type="file"
-      accept="image/*"
-      onChange={handleImageUpload}
-      className="file-input"
-      id="avatar-upload"
-    />
-    <label htmlFor="avatar-upload" className="upload-button">
-      {uploading ? 'uploading...' : 'choose photo'}
-    </label>
-  </div>
-) : (
+          {editing ? (
+            <div className="avatar-edit">
+              <img 
+                src={avatar || 'https://via.placeholder.com/100'} 
+                alt="preview" 
+                className="profile-avatar"
+              />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="file-input"
+                id="avatar-upload"
+              />
+              <label htmlFor="avatar-upload" className="upload-button">
+                {uploading ? 'uploading...' : 'choose photo'}
+              </label>
+            </div>
+          ) : (
             <img 
               src={user.avatar || 'https://via.placeholder.com/100'} 
               alt={user.username} 
@@ -217,12 +228,19 @@ const handleImageUpload = async (e) => {
                   </a>
                 )}
               </div>
+              {isOwnProfile && (
+                <button 
+                  className="delete-rec-btn"
+                  onClick={() => handleDeleteRec(rec.id)}
+                >
+                  ×
+                </button>
+              )}
             </div>
           ))
         )}
       </div>
 
-      {/* Modal for followers/following */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>

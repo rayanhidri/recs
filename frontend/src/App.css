@@ -1116,3 +1116,20 @@ body {
   cursor: pointer;
   font-family: inherit;
 }
+
+.delete-rec-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #ccc;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.delete-rec-btn:hover {
+  color: #e74c3c;
+}
+
+.profile-rec {
+  position: relative;
+}
