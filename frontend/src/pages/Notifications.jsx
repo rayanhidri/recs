@@ -51,12 +51,24 @@ export default function Notifications() {
     }
   }
 
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'like':
+        return '♥'
+      case 'comment':
+        return '💬'
+      case 'follow':
+        return '+'
+      default:
+        return ''
+    }
+  }
+
   const handleClick = (notif) => {
     if (notif.type === 'follow') {
       navigate(`/profile/${notif.from_username}`)
-    } else if (notif.rec_id) {
-      // For likes and comments, go to the feed (we can add a single rec view later)
-      navigate(`/`)
+    } else {
+      navigate(`/profile/${notif.from_username}`)
     }
   }
 
@@ -73,20 +85,24 @@ export default function Notifications() {
           {notifications.map(notif => (
             <div 
               key={notif.id} 
-              className={`notification-item ${!notif.is_read ? 'unread' : ''}`}
+              className={`notif-item ${!notif.is_read ? 'notif-unread' : ''}`}
               onClick={() => handleClick(notif)}
             >
-              <img 
-                src={notif.from_user_avatar || 'https://via.placeholder.com/40'} 
-                alt={notif.from_username}
-                className="notification-avatar"
-              />
-              <div className="notification-content">
+              <div className="notif-avatar-wrapper">
+                <img 
+                  src={notif.from_user_avatar || 'https://via.placeholder.com/44'} 
+                  alt={notif.from_username}
+                  className="notif-avatar"
+                />
+                <span className={`notif-icon notif-icon-${notif.type}`}>
+                  {getNotificationIcon(notif.type)}
+                </span>
+              </div>
+              <div className="notif-text">
                 <p>
-                  <span className="notification-username">{notif.from_username}</span>
-                  {' '}{getNotificationText(notif)}
+                  <strong>{notif.from_username}</strong> {getNotificationText(notif)}
                 </p>
-                <span className="notification-time">{timeAgo(notif.created_at)}</span>
+                <span className="notif-time">{timeAgo(notif.created_at)}</span>
               </div>
             </div>
           ))}
