@@ -27,6 +27,9 @@ function getDomain(url) {
 }
 
 function Post({ post, onLike, onNavigate }) {
+  const hasLinkWithImage = post.link && post.image
+  const hasImageOnly = post.image && !post.link
+
   return (
     <article className="post">
       <div className="post-header">
@@ -44,15 +47,21 @@ function Post({ post, onLike, onNavigate }) {
             </div>
           </div>
         </div>
-        {post.image && (
+        {hasLinkWithImage && (
           <img 
             src={post.image} 
             alt={post.title} 
             className="post-thumbnail"
-            onClick={() => post.link && window.open(post.link, '_blank')}
+            onClick={() => window.open(post.link, '_blank')}
           />
         )}
       </div>
+
+      {hasImageOnly && (
+        <div className="post-image-large">
+          <img src={post.image} alt={post.title} />
+        </div>
+      )}
       
       <div className="post-content">
         <h2 className="post-title">{post.title}</h2>
