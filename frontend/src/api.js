@@ -56,3 +56,8 @@ export default api
 export const getComments = (recId) => api.get(`/recs/${recId}/comments`)
 export const createComment = (recId, content) => api.post(`/recs/${recId}/comments`, { content })
 
+// Notifications
+export const getNotifications = () => api.get('/notifications/')
+export const markNotificationsRead = () => api.post('/notifications/read')
+
+
