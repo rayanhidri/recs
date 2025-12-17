@@ -67,8 +67,8 @@ export default function Notifications() {
   const handleClick = (notif) => {
     if (notif.type === 'follow') {
       navigate(`/profile/${notif.from_username}`)
-    } else {
-      navigate(`/profile/${notif.from_username}`)
+    } else if (notif.rec_id) {
+      navigate(`/rec/${notif.rec_id}`)
     }
   }
 

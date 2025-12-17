@@ -1241,3 +1241,23 @@ body {
   font-size: 0.8rem;
   color: #888;
 }
+/* Rec Detail Page */
+.rec-detail-page {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  color: #666;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-bottom: 16px;
+}
+
+.back-btn:hover {
+  color: #111;
+}

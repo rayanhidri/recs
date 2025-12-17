@@ -8,6 +8,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Notifications from './pages/Notifications'
 import './App.css'
+import RecDetail from './pages/RecDetail'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -50,6 +51,7 @@ function AppContent() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:username" element={<Profile />} />
         <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/rec/:recId" element={<RecDetail />} />
       </Routes>
     </>
   )

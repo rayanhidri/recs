@@ -145,3 +145,11 @@ def delete_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depend
     db.delete(rec)
     db.commit()
     return {"message": "Rec deleted"}
+
+@router.get("/{rec_id}", response_model=RecOut)
+def get_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    rec = db.query(Rec).filter(Rec.id == rec_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Rec not found")
+    user = db.query(User).filter(User.id == rec.user_id).first()
+    return get_rec_with_details(rec, user.username, db, user_id)
