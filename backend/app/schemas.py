@@ -90,3 +90,18 @@ class RecOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class CommentCreate(BaseModel):
+    content: str
+
+class CommentOut(BaseModel):
+    id: int
+    user_id: int
+    rec_id: int
+    content: str
+    created_at: datetime
+    username: str
+    user_avatar: str = ""
+
+    class Config:
+        from_attributes = True

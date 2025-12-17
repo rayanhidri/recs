@@ -52,3 +52,7 @@ export const unlikeRec = (recId) => api.delete(`/recs/${recId}/like`)
 
 export default api
 
+//Comments
+export const getComments = (recId) => api.get(`/recs/${recId}/comments`)
+export const createComment = (recId, content) => api.post(`/recs/${recId}/comments`, { content })
+

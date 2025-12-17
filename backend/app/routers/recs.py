@@ -6,6 +6,8 @@ from ..database import get_db
 from ..models import Rec, User, Follow, Like
 from ..schemas import RecCreate, RecOut
 from ..auth import get_current_user_id
+from ..models import Rec, User, Follow, Like, Comment
+from ..schemas import RecCreate, RecOut, CommentCreate, CommentOut
 
 router = APIRouter(prefix="/recs", tags=["recs"])
 
@@ -72,3 +74,42 @@ def unlike_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depend
     db.delete(like)
     db.commit()
     return {"message": "Unliked"}
+
+@router.get("/{rec_id}/comments", response_model=list[CommentOut])
+def get_comments(rec_id: int, db: Session = Depends(get_db)):
+    comments = db.query(Comment).filter(Comment.rec_id == rec_id).order_by(Comment.created_at.asc()).all()
+    results = []
+    for comment in comments:
+        user = db.query(User).filter(User.id == comment.user_id).first()
+        results.append(CommentOut(
+            id=comment.id,
+            user_id=comment.user_id,
+            rec_id=comment.rec_id,
+            content=comment.content,
+            created_at=comment.created_at,
+            username=user.username,
+            user_avatar=user.avatar or ""
+        ))
+    return results
+
+@router.post("/{rec_id}/comments", response_model=CommentOut)
+def create_comment(rec_id: int, comment: CommentCreate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    rec = db.query(Rec).filter(Rec.id == rec_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Rec not found")
+    
+    new_comment = Comment(user_id=user_id, rec_id=rec_id, content=comment.content)
+    db.add(new_comment)
+    db.commit()
+    db.refresh(new_comment)
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    return CommentOut(
+        id=new_comment.id,
+        user_id=new_comment.user_id,
+        rec_id=new_comment.rec_id,
+        content=new_comment.content,
+        created_at=new_comment.created_at,
+        username=user.username,
+        user_avatar=user.avatar or ""
+    )

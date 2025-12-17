@@ -54,3 +54,15 @@ class Like(Base):
     
 
     rec = relationship("Rec", back_populates="likes")
+
+class Comment(Base):
+    __tablename__ = "comments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    rec_id = Column(Integer, ForeignKey("recs.id"))
+    content = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User")
+    rec = relationship("Rec")
