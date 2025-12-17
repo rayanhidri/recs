@@ -67,3 +67,17 @@ class Comment(Base):
     
     user = relationship("User")
     rec = relationship("Rec")
+
+class Notification(Base):
+    __tablename__ = "notifications"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    from_user_id = Column(Integer, ForeignKey("users.id"))
+    type = Column(String(50))  # 'like', 'comment', 'follow'
+    rec_id = Column(Integer, ForeignKey("recs.id"), nullable=True)
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", foreign_keys=[user_id])
+    from_user = relationship("User", foreign_keys=[from_user_id])

@@ -3,11 +3,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from typing import List
 from ..database import get_db
-from ..models import Rec, User, Follow, Like
-from ..schemas import RecCreate, RecOut
-from ..auth import get_current_user_id
-from ..models import Rec, User, Follow, Like, Comment
+from ..models import Rec, User, Follow, Like, Comment, Notification
 from ..schemas import RecCreate, RecOut, CommentCreate, CommentOut
+from ..auth import get_current_user_id
 
 router = APIRouter(prefix="/recs", tags=["recs"])
 
@@ -17,9 +15,6 @@ def get_rec_with_details(rec, username, db, user_id):
     user = db.query(User).filter(User.username == username).first()
     user_avatar = user.avatar if user else ""
     return RecOut(**rec.__dict__, username=username, likes_count=likes_count, is_liked=is_liked, user_avatar=user_avatar)
-    likes_count = db.query(func.count(Like.id)).filter(Like.rec_id == rec.id).scalar()
-    is_liked = db.query(Like).filter(Like.user_id == user_id, Like.rec_id == rec.id).first() is not None
-    return RecOut(**rec.__dict__, username=username, likes_count=likes_count, is_liked=is_liked)
 
 @router.post("/", response_model=RecOut)
 def create_rec(rec: RecCreate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
@@ -63,6 +58,18 @@ def like_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depends(
     like = Like(user_id=user_id, rec_id=rec_id)
     db.add(like)
     db.commit()
+    
+    # Create notification (if not liking own rec)
+    if rec.user_id != user_id:
+        notification = Notification(
+            user_id=rec.user_id,
+            from_user_id=user_id,
+            type="like",
+            rec_id=rec_id
+        )
+        db.add(notification)
+        db.commit()
+    
     return {"message": "Liked"}
 
 @router.delete("/{rec_id}/like")
@@ -102,6 +109,17 @@ def create_comment(rec_id: int, comment: CommentCreate, db: Session = Depends(ge
     db.add(new_comment)
     db.commit()
     db.refresh(new_comment)
+    
+    # Create notification (if not commenting on own rec)
+    if rec.user_id != user_id:
+        notification = Notification(
+            user_id=rec.user_id,
+            from_user_id=user_id,
+            type="comment",
+            rec_id=rec_id
+        )
+        db.add(notification)
+        db.commit()
     
     user = db.query(User).filter(User.id == user_id).first()
     return CommentOut(

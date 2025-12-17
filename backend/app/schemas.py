@@ -105,3 +105,15 @@ class CommentOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class NotificationOut(BaseModel):
+    id: int
+    type: str
+    rec_id: int | None
+    is_read: bool
+    created_at: datetime
+    from_username: str
+    from_user_avatar: str = ""
+
+    class Config:
+        from_attributes = True
