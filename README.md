@@ -1,16 +1,40 @@
-# React + Vite
+# recs.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Share what you actually enjoy.**  
+A lightweight social platform where people post recommendations (“recs”) they genuinely like — music, videos, books, podcasts, films, articles, fashion, and more.
 
-Currently, two official plugins are available:
+**🚀 Live:** https://recs-nine.vercel.app/  
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## What is a “rec”?
+A **rec** is a simple post that answers:
 
-## React Compiler
+> “This is what I’m into right now — and why you should check it out.”
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Instead of chasing trends, **recs** is built for sharing things with friends (or people you “tune into”) in a clean, minimal feed.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Features (v1)
+- Post recommendations across multiple categories (music, video, podcast, book, film, etc.)
+- Link-based recs with **title + description + image preview**
+- Profile page with your bio, rec count, and social stats
+- Search users and **tune in** to people you want on your radar
+- Likes + comments to react without overcomplicating it
+- Minimal UI designed to feel fast and distraction-free
+
+---
+
+## Tech Stack
+- **Frontend:** React + Vite  
+- **Backend:** Python (API/service layer)  
+- **Deployment:** Vercel  
+
+---
+
+## Repo Structure
+```bash
+recs/
+  backend/    # Python backend (API)
+  frontend/   # React + Vite frontend
+  public/     # Static assets
