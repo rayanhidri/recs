@@ -15,7 +15,7 @@ const StartChatButton = ({ userId, username }) => {
   const handleStartChat = async () => {
     setLoading(true);
     try {
-      const response = await api.post(`/chat/conversations/${userId}`);
+        const response = await api.post(`/chat/conversations/${userId}`);
       navigate('/chat', { state: { conversationId: response.data.id } });
     } catch (error) {
       console.error('Error starting chat:', error);
