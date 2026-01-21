@@ -7,8 +7,9 @@ import Profile from './pages/Profile'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import Notifications from './pages/Notifications'
-import './App.css'
+import Chat from './pages/Chat'
 import RecDetail from './pages/RecDetail'
+import './App.css'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -38,6 +39,7 @@ function AppContent() {
           <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>feed</NavLink>
           <NavLink to="/search" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>search</NavLink>
           <NavLink to="/create" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>+</NavLink>
+          <NavLink to="/chat" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>messages</NavLink>
           <NavLink to="/notifications" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>notifications</NavLink>
           <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>profile</NavLink>
         </nav>
@@ -47,11 +49,12 @@ function AppContent() {
         <Route path="/" element={<Feed />} />
         <Route path="/search" element={<Search />} />
         <Route path="/create" element={<Create />} />
+        <Route path="/chat" element={<Chat />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:username" element={<Profile />} />
-        <Route path="*" element={<Navigate to="/" />} />
         <Route path="/rec/:recId" element={<RecDetail />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </>
   )

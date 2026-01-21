@@ -117,3 +117,32 @@ class NotificationOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Chat / Messages
+class MessageCreate(BaseModel):
+    content: str
+
+class MessageOut(BaseModel):
+    id: int
+    conversation_id: int
+    sender_id: int
+    content: str
+    is_read: bool
+    created_at: datetime
+    sender_username: str
+    sender_avatar: str = ""
+
+    class Config:
+        from_attributes = True
+
+class ConversationOut(BaseModel):
+    id: int
+    other_user_id: int
+    other_username: str
+    other_avatar: str
+    last_message: str = ""
+    last_message_time: datetime | None = None
+    unread_count: int = 0
+
+    class Config:
+        from_attributes = True

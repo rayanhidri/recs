@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .routers import auth, recs, users, notifications
+from .routers import auth, recs, users, notifications, chat
 
 Base.metadata.create_all(bind=engine)
 
@@ -27,3 +27,4 @@ def root():
     return {"message": "recs API is running"}
 
 app.include_router(notifications.router)
+app.include_router(chat.router)

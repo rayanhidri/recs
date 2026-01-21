@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing, deleteRec } from '../api'
 import { useAuth } from '../context/AuthContext'
+import StartChatButton from '../components/StartChatButton'
 
 export default function Profile() {
   const { username } = useParams()
@@ -195,12 +196,15 @@ export default function Profile() {
             <button className="edit-button" onClick={() => setEditing(true)}>edit profile</button>
           )
         ) : (
-          <button 
-            className={`tune-button ${user.is_following ? 'tuned' : ''}`}
-            onClick={handleFollow}
-          >
-            {user.is_following ? 'tuned' : 'tune in'}
-          </button>
+          <>
+            <button 
+              className={`tune-button ${user.is_following ? 'tuned' : ''}`}
+              onClick={handleFollow}
+            >
+              {user.is_following ? 'tuned' : 'tune in'}
+            </button>
+            <StartChatButton userId={user.id} username={user.username} />
+          </>
         )}
       </div>
 
