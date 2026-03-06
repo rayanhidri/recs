@@ -1888,3 +1888,21 @@ body {
   }
 }
   }
+  .chat-header-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px;
+    max-width: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    cursor: pointer;
+  }
+  
+  .conversation-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px;
+    max-width: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
