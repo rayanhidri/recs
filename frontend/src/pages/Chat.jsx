@@ -19,6 +19,12 @@ function timeAgo(dateString) {
   return `${Math.floor(days / 7)}w`
 }
 
+function formatDuration(seconds) {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+}
+
 export default function Chat() {
   const navigate = useNavigate()
   const messagesEndRef = useRef(null)
@@ -36,6 +42,7 @@ export default function Chat() {
   
   const {
     callState,
+    callDuration,
     incomingCall,
     startCall,
     acceptCall,
@@ -44,7 +51,7 @@ export default function Chat() {
     handleCallOffer,
     handleCallAnswer,
     handleIceCandidate
-  } = useWebRTC(sendMessage)
+  } = useWebRTC(sendMessage, remoteAudioRef)
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -72,7 +79,6 @@ export default function Chat() {
     if (me) fetchConversations()
   }, [me])
 
-  // Handle incoming WebSocket messages
   useEffect(() => {
     if (!lastMessage) return
 
@@ -104,7 +110,6 @@ export default function Chat() {
     } else if (lastMessage.type === 'read') {
       setMessages(prev => prev.map(msg => ({ ...msg, is_read: true })))
     }
-    // WebRTC signaling
     else if (lastMessage.type === 'call_offer') {
       handleCallOffer(lastMessage)
     } else if (lastMessage.type === 'call_answer') {
@@ -178,8 +183,7 @@ export default function Chat() {
 
   return (
     <div className="chat-container">
-      {/* Hidden audio element for remote stream */}
-      <audio ref={remoteAudioRef} autoPlay />
+      <audio ref={remoteAudioRef} autoPlay playsInline />
       
       {/* Incoming Call Modal */}
       {callState === 'receiving' && incomingCall && (
@@ -194,6 +198,42 @@ export default function Chat() {
                 <button className="call-accept" onClick={handleAcceptCall}>Accept</button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active Call Screen */}
+      {callState === 'connected' && activeConversation && (
+        <div className="call-screen-overlay">
+          <div className="call-screen">
+            <img 
+              src={activeConversation.other_avatar || 'https://via.placeholder.com/120'} 
+              alt=""
+              className="call-screen-avatar"
+            />
+            <h2>{activeConversation.other_username}</h2>
+            <p className="call-timer">{formatDuration(callDuration)}</p>
+            <button className="call-end-button" onClick={handleEndCall}>
+              End Call
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Calling Screen */}
+      {callState === 'calling' && activeConversation && (
+        <div className="call-screen-overlay">
+          <div className="call-screen">
+            <img 
+              src={activeConversation.other_avatar || 'https://via.placeholder.com/120'} 
+              alt=""
+              className="call-screen-avatar"
+            />
+            <h2>{activeConversation.other_username}</h2>
+            <p className="call-status">Calling...</p>
+            <button className="call-end-button" onClick={handleEndCall}>
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -252,28 +292,12 @@ export default function Chat() {
               />
               <div className="chat-main-info">
                 <span className="chat-main-name">{activeConversation.other_username}</span>
-                {callState === 'connected' ? (
-                  <span className="chat-main-status call-active">On call</span>
-                ) : isConnected ? (
-                  <span className="chat-main-status">active now</span>
-                ) : null}
+                {isConnected && <span className="chat-main-status">active now</span>}
               </div>
               <div className="chat-header-actions">
-                {callState === 'idle' && (
-                  <button className="call-button" onClick={handleStartCall} title="Start audio call">
-                    📞
-                  </button>
-                )}
-                {callState === 'calling' && (
-                  <button className="call-button calling" onClick={handleEndCall} title="Cancel call">
-                    📞 Calling...
-                  </button>
-                )}
-                {callState === 'connected' && (
-                  <button className="call-button end-call" onClick={handleEndCall} title="End call">
-                    🔴 End
-                  </button>
-                )}
+                <button className="call-button" onClick={handleStartCall} title="Start audio call">
+                  📞
+                </button>
               </div>
             </div>
 

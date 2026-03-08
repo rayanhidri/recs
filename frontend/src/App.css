@@ -1777,3 +1777,75 @@ body {
   .call-reject:hover {
     transform: scale(1.05);
   }
+/* ============================================
+   CALL SCREEN STYLES
+   ============================================ */
+
+   .call-screen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .call-screen {
+    text-align: center;
+    color: white;
+  }
+  
+  .call-screen-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    margin-bottom: 20px;
+  }
+  
+  .call-screen h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+  }
+  
+  .call-timer {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 40px 0;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .call-status {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 40px 0;
+    animation: pulse-text 1.5s infinite;
+  }
+  
+  @keyframes pulse-text {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  
+  .call-end-button {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 16px 48px;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+  }
+  
+  .call-end-button:hover {
+    background: #dc2626;
+    transform: scale(1.05);
+  }

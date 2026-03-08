@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 
 const ICE_SERVERS = {
   iceServers: [
@@ -7,18 +7,40 @@ const ICE_SERVERS = {
   ]
 }
 
-export default function useWebRTC(sendMessage) {
+export default function useWebRTC(sendMessage, remoteAudioRef) {
   const peerConnection = useRef(null)
   const localStream = useRef(null)
-  const remoteAudio = useRef(null)
   
-  const [callState, setCallState] = useState('idle') // idle, calling, receiving, connected
+  const [callState, setCallState] = useState('idle')
   const [incomingCall, setIncomingCall] = useState(null)
+  const [callDuration, setCallDuration] = useState(0)
+  const callTimer = useRef(null)
+
+  // Start call timer when connected
+  useEffect(() => {
+    if (callState === 'connected') {
+      setCallDuration(0)
+      callTimer.current = setInterval(() => {
+        setCallDuration(prev => prev + 1)
+      }, 1000)
+    } else {
+      if (callTimer.current) {
+        clearInterval(callTimer.current)
+        callTimer.current = null
+      }
+      setCallDuration(0)
+    }
+    
+    return () => {
+      if (callTimer.current) {
+        clearInterval(callTimer.current)
+      }
+    }
+  }, [callState])
 
   const initializePeerConnection = useCallback((conversationId) => {
     peerConnection.current = new RTCPeerConnection(ICE_SERVERS)
     
-    // Handle ICE candidates
     peerConnection.current.onicecandidate = (event) => {
       if (event.candidate) {
         sendMessage({
@@ -29,15 +51,16 @@ export default function useWebRTC(sendMessage) {
       }
     }
     
-    // Handle remote stream
     peerConnection.current.ontrack = (event) => {
-      if (remoteAudio.current) {
-        remoteAudio.current.srcObject = event.streams[0]
+      console.log('Received remote track:', event.streams[0])
+      if (remoteAudioRef && remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = event.streams[0]
+        remoteAudioRef.current.play().catch(err => console.log('Audio play error:', err))
       }
     }
     
-    // Connection state changes
     peerConnection.current.onconnectionstatechange = () => {
+      console.log('Connection state:', peerConnection.current.connectionState)
       if (peerConnection.current.connectionState === 'connected') {
         setCallState('connected')
       } else if (peerConnection.current.connectionState === 'disconnected' || 
@@ -47,24 +70,21 @@ export default function useWebRTC(sendMessage) {
     }
     
     return peerConnection.current
-  }, [sendMessage])
+  }, [sendMessage, remoteAudioRef])
 
   const startCall = useCallback(async (conversationId) => {
     try {
       setCallState('calling')
       
-      // Get microphone access
       localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true })
+      console.log('Got local stream:', localStream.current)
       
-      // Initialize peer connection
       const pc = initializePeerConnection(conversationId)
       
-      // Add local tracks
       localStream.current.getTracks().forEach(track => {
         pc.addTrack(track, localStream.current)
       })
       
-      // Create and send offer
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
       
@@ -86,21 +106,17 @@ export default function useWebRTC(sendMessage) {
 
   const acceptCall = useCallback(async (conversationId, offer) => {
     try {
-      // Get microphone access
       localStream.current = await navigator.mediaDevices.getUserMedia({ audio: true })
+      console.log('Got local stream for answer:', localStream.current)
       
-      // Initialize peer connection
       const pc = initializePeerConnection(conversationId)
       
-      // Add local tracks
       localStream.current.getTracks().forEach(track => {
         pc.addTrack(track, localStream.current)
       })
       
-      // Set remote description
       await pc.setRemoteDescription(new RTCSessionDescription(offer))
       
-      // Create and send answer
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
       
@@ -129,7 +145,7 @@ export default function useWebRTC(sendMessage) {
 
   const handleIceCandidate = useCallback(async (candidate) => {
     try {
-      if (peerConnection.current) {
+      if (peerConnection.current && peerConnection.current.remoteDescription) {
         await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate))
       }
     } catch (err) {
@@ -138,19 +154,16 @@ export default function useWebRTC(sendMessage) {
   }, [])
 
   const endCall = useCallback((conversationId = null) => {
-    // Stop local stream
     if (localStream.current) {
       localStream.current.getTracks().forEach(track => track.stop())
       localStream.current = null
     }
     
-    // Close peer connection
     if (peerConnection.current) {
       peerConnection.current.close()
       peerConnection.current = null
     }
     
-    // Notify other user
     if (conversationId) {
       sendMessage({
         type: 'call_end',
@@ -173,8 +186,8 @@ export default function useWebRTC(sendMessage) {
 
   return {
     callState,
+    callDuration,
     incomingCall,
-    remoteAudio,
     startCall,
     acceptCall,
     rejectCall,
