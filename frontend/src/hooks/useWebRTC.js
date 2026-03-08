@@ -13,11 +13,6 @@ const ICE_SERVERS = {
       urls: 'turn:openrelay.metered.ca:443',
       username: 'openrelayproject',
       credential: 'openrelayproject'
-    },
-    {
-      urls: 'turn:openrelay.metered.ca:443?transport=tcp',
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
     }
   ]
 }
@@ -26,6 +21,7 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
   const peerConnection = useRef(null)
   const localStream = useRef(null)
   const pendingCandidates = useRef([])
+  const isInCall = useRef(false)
   
   const [callState, setCallState] = useState('idle')
   const [incomingCall, setIncomingCall] = useState(null)
@@ -54,7 +50,6 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
   }, [callState])
 
   const initializePeerConnection = useCallback((conversationId) => {
-    // Close existing connection if any
     if (peerConnection.current) {
       peerConnection.current.close()
     }
@@ -66,11 +61,11 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     
     peerConnection.current.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log('Generated ICE candidate, sending...')
+        console.log('Generated ICE candidate:', event.candidate.type, event.candidate.protocol)
         sendMessage({
           type: 'ice_candidate',
           conversation_id: conversationId,
-          candidate: event.candidate
+          candidate: event.candidate.toJSON()
         })
       } else {
         console.log('ICE gathering complete')
@@ -79,10 +74,6 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     
     peerConnection.current.ontrack = (event) => {
       console.log('>>> RECEIVED REMOTE TRACK <<<')
-      console.log('Streams:', event.streams)
-      console.log('Track:', event.track)
-      console.log('Track readyState:', event.track.readyState)
-      console.log('Track muted:', event.track.muted)
       
       if (remoteAudioRef && remoteAudioRef.current && event.streams[0]) {
         remoteAudioRef.current.srcObject = event.streams[0]
@@ -103,42 +94,36 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     }
     
     peerConnection.current.onconnectionstatechange = () => {
-      console.log('Connection state changed to:', peerConnection.current.connectionState)
-      if (peerConnection.current.connectionState === 'connected') {
+      console.log('Connection state:', peerConnection.current?.connectionState)
+      if (peerConnection.current?.connectionState === 'connected') {
         setCallState('connected')
-      } else if (peerConnection.current.connectionState === 'disconnected' || 
-                 peerConnection.current.connectionState === 'failed') {
+      } else if (peerConnection.current?.connectionState === 'disconnected' || 
+                 peerConnection.current?.connectionState === 'failed') {
         endCall()
       }
     }
 
     peerConnection.current.oniceconnectionstatechange = () => {
-      console.log('ICE connection state changed to:', peerConnection.current.iceConnectionState)
-    }
-    
-    peerConnection.current.onicegatheringstatechange = () => {
-      console.log('ICE gathering state:', peerConnection.current.iceGatheringState)
-    }
-
-    peerConnection.current.onsignalingstatechange = () => {
-      console.log('Signaling state:', peerConnection.current.signalingState)
+      console.log('ICE connection state:', peerConnection.current?.iceConnectionState)
     }
     
     return peerConnection.current
   }, [sendMessage, remoteAudioRef])
 
   const startCall = useCallback(async (conversationId) => {
+    if (isInCall.current) {
+      console.log('Already in a call, ignoring')
+      return
+    }
+    
     try {
+      isInCall.current = true
       setCallState('calling')
       pendingCandidates.current = []
       
       console.log('Starting call...')
       localStream.current = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
+        audio: true
       })
       console.log('Got local stream')
       
@@ -153,21 +138,33 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
       const offer = await pc.createOffer()
       console.log('Setting local description...')
       await pc.setLocalDescription(offer)
-      console.log('Sending offer via WebSocket')
       
+      // Wait a bit for ICE candidates to be gathered
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      console.log('Sending offer via WebSocket')
       sendMessage({
         type: 'call_offer',
         conversation_id: conversationId,
-        offer: pc.localDescription
+        offer: {
+          type: pc.localDescription.type,
+          sdp: pc.localDescription.sdp
+        }
       })
     } catch (err) {
       console.error('Error starting call:', err)
+      isInCall.current = false
       setCallState('idle')
     }
   }, [initializePeerConnection, sendMessage])
 
-  const handleCallOffer = useCallback(async (data) => {
+  const handleCallOffer = useCallback((data) => {
+    if (isInCall.current) {
+      console.log('Already in a call, ignoring incoming offer')
+      return
+    }
     console.log('Received call offer')
+    isInCall.current = true
     pendingCandidates.current = []
     setIncomingCall(data)
     setCallState('receiving')
@@ -178,11 +175,7 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
       console.log('Accepting call...')
       
       localStream.current = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        } 
+        audio: true
       })
       console.log('Got local stream for answer')
       
@@ -195,7 +188,7 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
       
       console.log('Setting remote description (offer)...')
       await pc.setRemoteDescription(new RTCSessionDescription(offer))
-      console.log('Remote description set. Signaling state:', pc.signalingState)
+      console.log('Remote description set')
       
       // Process pending ICE candidates
       console.log(`Processing ${pendingCandidates.current.length} pending ICE candidates`)
@@ -213,18 +206,25 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
       const answer = await pc.createAnswer()
       console.log('Setting local description (answer)...')
       await pc.setLocalDescription(answer)
-      console.log('Sending answer via WebSocket')
       
+      // Wait a bit for ICE candidates
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
+      console.log('Sending answer via WebSocket')
       sendMessage({
         type: 'call_answer',
         conversation_id: conversationId,
-        answer: pc.localDescription
+        answer: {
+          type: pc.localDescription.type,
+          sdp: pc.localDescription.sdp
+        }
       })
       
       setCallState('connected')
       setIncomingCall(null)
     } catch (err) {
       console.error('Error accepting call:', err)
+      isInCall.current = false
       setCallState('idle')
     }
   }, [initializePeerConnection, sendMessage])
@@ -237,9 +237,14 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
         return
       }
       
+      if (peerConnection.current.signalingState !== 'have-local-offer') {
+        console.log('Ignoring answer - wrong state:', peerConnection.current.signalingState)
+        return
+      }
+      
       console.log('Setting remote description (answer)...')
       await peerConnection.current.setRemoteDescription(new RTCSessionDescription(answer))
-      console.log('Remote description set. Signaling state:', peerConnection.current.signalingState)
+      console.log('Remote description set')
       
       // Process pending ICE candidates
       console.log(`Processing ${pendingCandidates.current.length} pending ICE candidates`)
@@ -262,7 +267,13 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
   const handleIceCandidate = useCallback(async (candidate) => {
     console.log('Received ICE candidate from remote')
     
-    if (peerConnection.current && peerConnection.current.remoteDescription) {
+    if (!peerConnection.current) {
+      console.log('No peer connection, queueing candidate')
+      pendingCandidates.current.push(candidate)
+      return
+    }
+    
+    if (peerConnection.current.remoteDescription) {
       try {
         await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate))
         console.log('Added ICE candidate directly')
@@ -270,13 +281,15 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
         console.error('Error adding ICE candidate:', err)
       }
     } else {
-      console.log('Queueing ICE candidate (no remote description yet)')
+      console.log('No remote description yet, queueing candidate')
       pendingCandidates.current.push(candidate)
     }
   }, [])
 
   const endCall = useCallback((conversationId = null) => {
     console.log('Ending call')
+    isInCall.current = false
+    
     if (localStream.current) {
       localStream.current.getTracks().forEach(track => track.stop())
       localStream.current = null
@@ -301,6 +314,7 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
   }, [sendMessage])
 
   const rejectCall = useCallback((conversationId) => {
+    isInCall.current = false
     sendMessage({
       type: 'call_end',
       conversation_id: conversationId
