@@ -97,9 +97,62 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = D
                         "type": "read",
                         "conversation_id": conversation_id
                     })
+            
+            # WebRTC Signaling for Audio Calls
+            elif data["type"] == "call_offer":
+                conversation_id = data["conversation_id"]
+                offer = data["offer"]
+                conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+                recipient_id = conversation.user2_id if conversation.user1_id == user_id else conversation.user1_id
+                
+                if recipient_id in active_connections:
+                    await active_connections[recipient_id].send_json({
+                        "type": "call_offer",
+                        "conversation_id": conversation_id,
+                        "offer": offer,
+                        "caller_id": user_id
+                    })
+            
+            elif data["type"] == "call_answer":
+                conversation_id = data["conversation_id"]
+                answer = data["answer"]
+                conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+                recipient_id = conversation.user2_id if conversation.user1_id == user_id else conversation.user1_id
+                
+                if recipient_id in active_connections:
+                    await active_connections[recipient_id].send_json({
+                        "type": "call_answer",
+                        "conversation_id": conversation_id,
+                        "answer": answer
+                    })
+            
+            elif data["type"] == "ice_candidate":
+                conversation_id = data["conversation_id"]
+                candidate = data["candidate"]
+                conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+                recipient_id = conversation.user2_id if conversation.user1_id == user_id else conversation.user1_id
+                
+                if recipient_id in active_connections:
+                    await active_connections[recipient_id].send_json({
+                        "type": "ice_candidate",
+                        "conversation_id": conversation_id,
+                        "candidate": candidate
+                    })
+            
+            elif data["type"] == "call_end":
+                conversation_id = data["conversation_id"]
+                conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+                recipient_id = conversation.user2_id if conversation.user1_id == user_id else conversation.user1_id
+                
+                if recipient_id in active_connections:
+                    await active_connections[recipient_id].send_json({
+                        "type": "call_end",
+                        "conversation_id": conversation_id
+                    })
                     
     except WebSocketDisconnect:
-        del active_connections[user_id]
+        if user_id in active_connections:
+            del active_connections[user_id]
 
 
 # Get or create conversation

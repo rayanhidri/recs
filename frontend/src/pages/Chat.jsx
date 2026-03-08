@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getConversations, getMessages, getMe } from '../api'
 import useWebSocket from '../hooks/useWebSocket'
+import useWebRTC from '../hooks/useWebRTC'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -21,6 +22,7 @@ function timeAgo(dateString) {
 export default function Chat() {
   const navigate = useNavigate()
   const messagesEndRef = useRef(null)
+  const remoteAudioRef = useRef(null)
   
   const [me, setMe] = useState(null)
   const [conversations, setConversations] = useState([])
@@ -31,6 +33,18 @@ export default function Chat() {
   const [isTyping, setIsTyping] = useState(false)
   
   const { isConnected, lastMessage, sendMessage, sendTyping, markAsRead } = useWebSocket(me?.id)
+  
+  const {
+    callState,
+    incomingCall,
+    startCall,
+    acceptCall,
+    rejectCall,
+    endCall,
+    handleCallOffer,
+    handleCallAnswer,
+    handleIceCandidate
+  } = useWebRTC(sendMessage)
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -58,6 +72,7 @@ export default function Chat() {
     if (me) fetchConversations()
   }, [me])
 
+  // Handle incoming WebSocket messages
   useEffect(() => {
     if (!lastMessage) return
 
@@ -89,7 +104,17 @@ export default function Chat() {
     } else if (lastMessage.type === 'read') {
       setMessages(prev => prev.map(msg => ({ ...msg, is_read: true })))
     }
-  }, [lastMessage, activeConversation, me, markAsRead])
+    // WebRTC signaling
+    else if (lastMessage.type === 'call_offer') {
+      handleCallOffer(lastMessage)
+    } else if (lastMessage.type === 'call_answer') {
+      handleCallAnswer(lastMessage.answer)
+    } else if (lastMessage.type === 'ice_candidate') {
+      handleIceCandidate(lastMessage.candidate)
+    } else if (lastMessage.type === 'call_end') {
+      endCall()
+    }
+  }, [lastMessage, activeConversation, me, markAsRead, handleCallOffer, handleCallAnswer, handleIceCandidate, endCall])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -125,10 +150,54 @@ export default function Chat() {
     if (activeConversation) sendTyping(activeConversation.id)
   }
 
+  const handleStartCall = () => {
+    if (activeConversation) {
+      startCall(activeConversation.id)
+    }
+  }
+
+  const handleAcceptCall = () => {
+    if (incomingCall) {
+      acceptCall(incomingCall.conversation_id, incomingCall.offer)
+    }
+  }
+
+  const handleRejectCall = () => {
+    if (incomingCall) {
+      rejectCall(incomingCall.conversation_id)
+    }
+  }
+
+  const handleEndCall = () => {
+    if (activeConversation) {
+      endCall(activeConversation.id)
+    }
+  }
+
   if (loading) return <div className="chat-loading">loading...</div>
 
   return (
     <div className="chat-container">
+      {/* Hidden audio element for remote stream */}
+      <audio ref={remoteAudioRef} autoPlay />
+      
+      {/* Incoming Call Modal */}
+      {callState === 'receiving' && incomingCall && (
+        <div className="call-modal-overlay">
+          <div className="call-modal">
+            <div className="call-modal-content">
+              <div className="call-icon">📞</div>
+              <h3>Incoming Call</h3>
+              <p>{conversations.find(c => c.id === incomingCall.conversation_id)?.other_username || 'Someone'} is calling...</p>
+              <div className="call-modal-buttons">
+                <button className="call-reject" onClick={handleRejectCall}>Decline</button>
+                <button className="call-accept" onClick={handleAcceptCall}>Accept</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <div className="chat-sidebar">
         <div className="chat-sidebar-header">
@@ -183,7 +252,28 @@ export default function Chat() {
               />
               <div className="chat-main-info">
                 <span className="chat-main-name">{activeConversation.other_username}</span>
-                {isConnected && <span className="chat-main-status">active now</span>}
+                {callState === 'connected' ? (
+                  <span className="chat-main-status call-active">On call</span>
+                ) : isConnected ? (
+                  <span className="chat-main-status">active now</span>
+                ) : null}
+              </div>
+              <div className="chat-header-actions">
+                {callState === 'idle' && (
+                  <button className="call-button" onClick={handleStartCall} title="Start audio call">
+                    📞
+                  </button>
+                )}
+                {callState === 'calling' && (
+                  <button className="call-button calling" onClick={handleEndCall} title="Cancel call">
+                    📞 Calling...
+                  </button>
+                )}
+                {callState === 'connected' && (
+                  <button className="call-button end-call" onClick={handleEndCall} title="End call">
+                    🔴 End
+                  </button>
+                )}
               </div>
             </div>
 
