@@ -60,8 +60,9 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     console.log('Created new RTCPeerConnection')
     
     peerConnection.current.onicecandidate = (event) => {
+      console.log('ICE candidate event:', event.candidate)
       if (event.candidate) {
-        console.log('Generated ICE candidate:', event.candidate.type, event.candidate.protocol)
+        console.log('Generated ICE candidate:', event.candidate.candidate)
         sendMessage({
           type: 'ice_candidate',
           conversation_id: conversationId,
@@ -139,9 +140,6 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
       console.log('Setting local description...')
       await pc.setLocalDescription(offer)
       
-      // Wait a bit for ICE candidates to be gathered
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
       console.log('Sending offer via WebSocket')
       sendMessage({
         type: 'call_offer',
@@ -165,7 +163,6 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     }
     console.log('Received call offer')
     isInCall.current = true
-    //pendingCandidates.current = []
     setIncomingCall(data)
     setCallState('receiving')
   }, [])
@@ -206,9 +203,6 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
       const answer = await pc.createAnswer()
       console.log('Setting local description (answer)...')
       await pc.setLocalDescription(answer)
-      
-      // Wait a bit for ICE candidates
-      await new Promise(resolve => setTimeout(resolve, 500))
       
       console.log('Sending answer via WebSocket')
       sendMessage({
