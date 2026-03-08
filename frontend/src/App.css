@@ -1849,3 +1849,82 @@ body {
     background: #dc2626;
     transform: scale(1.05);
   }
+  /* ============================================
+   VIDEO CALL STYLES
+   ============================================ */
+
+.call-screen.video-call {
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border-radius: 0;
+  background: #000;
+  position: relative;
+}
+
+.remote-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.local-video {
+  position: absolute;
+  bottom: 100px;
+  right: 20px;
+  width: 120px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.video-call-info {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.video-call-info h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.3rem;
+}
+
+.video-call-info .call-timer {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.call-screen.video-call .call-end-button {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.chat-header-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.chat-header-actions .call-button {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.chat-header-actions .call-button:hover {
+  background: #f0f0f0;
+}

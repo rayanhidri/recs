@@ -28,7 +28,8 @@ function formatDuration(seconds) {
 export default function Chat() {
   const navigate = useNavigate()
   const messagesEndRef = useRef(null)
-  const remoteAudioRef = useRef(null)
+  const remoteVideoRef = useRef(null)
+  const localVideoRef = useRef(null)
   
   const [me, setMe] = useState(null)
   const [conversations, setConversations] = useState([])
@@ -44,6 +45,7 @@ export default function Chat() {
     callState,
     callDuration,
     incomingCall,
+    isVideoCall,
     startCall,
     acceptCall,
     rejectCall,
@@ -51,7 +53,7 @@ export default function Chat() {
     handleCallOffer,
     handleCallAnswer,
     handleIceCandidate
-  } = useWebRTC(sendMessage, remoteAudioRef)
+  } = useWebRTC(sendMessage, remoteVideoRef, localVideoRef)
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -155,15 +157,21 @@ export default function Chat() {
     if (activeConversation) sendTyping(activeConversation.id)
   }
 
-  const handleStartCall = () => {
+  const handleStartAudioCall = () => {
     if (activeConversation) {
-      startCall(activeConversation.id)
+      startCall(activeConversation.id, false)
+    }
+  }
+
+  const handleStartVideoCall = () => {
+    if (activeConversation) {
+      startCall(activeConversation.id, true)
     }
   }
 
   const handleAcceptCall = () => {
     if (incomingCall) {
-      acceptCall(incomingCall.conversation_id, incomingCall.offer)
+      acceptCall(incomingCall.conversation_id, incomingCall.offer, incomingCall.withVideo || false)
     }
   }
 
@@ -183,15 +191,13 @@ export default function Chat() {
 
   return (
     <div className="chat-container">
-      <audio ref={remoteAudioRef} autoPlay playsInline />
-      
       {/* Incoming Call Modal */}
       {callState === 'receiving' && incomingCall && (
         <div className="call-modal-overlay">
           <div className="call-modal">
             <div className="call-modal-content">
-              <div className="call-icon">📞</div>
-              <h3>Incoming Call</h3>
+              <div className="call-icon">{incomingCall.withVideo ? '📹' : '📞'}</div>
+              <h3>Incoming {incomingCall.withVideo ? 'Video' : 'Audio'} Call</h3>
               <p>{conversations.find(c => c.id === incomingCall.conversation_id)?.other_username || 'Someone'} is calling...</p>
               <div className="call-modal-buttons">
                 <button className="call-reject" onClick={handleRejectCall}>Decline</button>
@@ -203,36 +209,48 @@ export default function Chat() {
       )}
 
       {/* Active Call Screen */}
-      {callState === 'connected' && activeConversation && (
+      {(callState === 'connected' || callState === 'calling') && activeConversation && (
         <div className="call-screen-overlay">
-          <div className="call-screen">
-            <img 
-              src={activeConversation.other_avatar || 'https://via.placeholder.com/120'} 
-              alt=""
-              className="call-screen-avatar"
-            />
-            <h2>{activeConversation.other_username}</h2>
-            <p className="call-timer">{formatDuration(callDuration)}</p>
+          <div className={`call-screen ${isVideoCall ? 'video-call' : ''}`}>
+            {isVideoCall ? (
+              <>
+                <video 
+                  ref={remoteVideoRef} 
+                  className="remote-video" 
+                  autoPlay 
+                  playsInline
+                />
+                <video 
+                  ref={localVideoRef} 
+                  className="local-video" 
+                  autoPlay 
+                  playsInline 
+                  muted
+                />
+                <div className="video-call-info">
+                  <h2>{activeConversation.other_username}</h2>
+                  <p className="call-timer">
+                    {callState === 'calling' ? 'Calling...' : formatDuration(callDuration)}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <img 
+                  src={activeConversation.other_avatar || 'https://via.placeholder.com/120'} 
+                  alt=""
+                  className="call-screen-avatar"
+                />
+                <h2>{activeConversation.other_username}</h2>
+                <p className="call-timer">
+                  {callState === 'calling' ? 'Calling...' : formatDuration(callDuration)}
+                </p>
+                {/* Hidden audio element for audio-only calls */}
+                <video ref={remoteVideoRef} style={{ display: 'none' }} autoPlay playsInline />
+              </>
+            )}
             <button className="call-end-button" onClick={handleEndCall}>
-              End Call
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Calling Screen */}
-      {callState === 'calling' && activeConversation && (
-        <div className="call-screen-overlay">
-          <div className="call-screen">
-            <img 
-              src={activeConversation.other_avatar || 'https://via.placeholder.com/120'} 
-              alt=""
-              className="call-screen-avatar"
-            />
-            <h2>{activeConversation.other_username}</h2>
-            <p className="call-status">Calling...</p>
-            <button className="call-end-button" onClick={handleEndCall}>
-              Cancel
+              {callState === 'calling' ? 'Cancel' : 'End Call'}
             </button>
           </div>
         </div>
@@ -295,8 +313,11 @@ export default function Chat() {
                 {isConnected && <span className="chat-main-status">active now</span>}
               </div>
               <div className="chat-header-actions">
-                <button className="call-button" onClick={handleStartCall} title="Start audio call">
+                <button className="call-button" onClick={handleStartAudioCall} title="Audio call">
                   📞
+                </button>
+                <button className="call-button" onClick={handleStartVideoCall} title="Video call">
+                  📹
                 </button>
               </div>
             </div>

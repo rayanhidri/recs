@@ -17,7 +17,7 @@ const ICE_SERVERS = {
   ]
 }
 
-export default function useWebRTC(sendMessage, remoteAudioRef) {
+export default function useWebRTC(sendMessage, remoteVideoRef, localVideoRef) {
   const peerConnection = useRef(null)
   const localStream = useRef(null)
   const pendingCandidates = useRef([])
@@ -26,6 +26,7 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
   const [callState, setCallState] = useState('idle')
   const [incomingCall, setIncomingCall] = useState(null)
   const [callDuration, setCallDuration] = useState(0)
+  const [isVideoCall, setIsVideoCall] = useState(false)
   const callTimer = useRef(null)
 
   useEffect(() => {
@@ -74,22 +75,19 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     }
     
     peerConnection.current.ontrack = (event) => {
-      console.log('>>> RECEIVED REMOTE TRACK <<<')
+      console.log('>>> RECEIVED REMOTE TRACK <<<', event.track.kind)
       
-      if (remoteAudioRef && remoteAudioRef.current && event.streams[0]) {
-        remoteAudioRef.current.srcObject = event.streams[0]
-        remoteAudioRef.current.volume = 1.0
-        remoteAudioRef.current.muted = false
-        
-        remoteAudioRef.current.play()
-          .then(() => console.log('Audio playing successfully'))
-          .catch(err => console.log('Audio play error:', err))
+      if (remoteVideoRef && remoteVideoRef.current && event.streams[0]) {
+        remoteVideoRef.current.srcObject = event.streams[0]
+        remoteVideoRef.current.play()
+          .then(() => console.log('Remote media playing successfully'))
+          .catch(err => console.log('Media play error:', err))
       }
       
       event.track.onunmute = () => {
-        console.log('>>> TRACK UNMUTED <<<')
-        if (remoteAudioRef && remoteAudioRef.current) {
-          remoteAudioRef.current.play().catch(e => console.log('Play on unmute failed:', e))
+        console.log('>>> TRACK UNMUTED <<<', event.track.kind)
+        if (remoteVideoRef && remoteVideoRef.current) {
+          remoteVideoRef.current.play().catch(e => console.log('Play on unmute failed:', e))
         }
       }
     }
@@ -109,9 +107,9 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     }
     
     return peerConnection.current
-  }, [sendMessage, remoteAudioRef])
+  }, [sendMessage, remoteVideoRef])
 
-  const startCall = useCallback(async (conversationId) => {
+  const startCall = useCallback(async (conversationId, withVideo = false) => {
     if (isInCall.current) {
       console.log('Already in a call, ignoring')
       return
@@ -120,18 +118,27 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     try {
       isInCall.current = true
       setCallState('calling')
+      setIsVideoCall(withVideo)
       pendingCandidates.current = []
       
-      console.log('Starting call...')
+      console.log('Starting call...', withVideo ? 'with video' : 'audio only')
       localStream.current = await navigator.mediaDevices.getUserMedia({ 
-        audio: true
+        audio: true,
+        video: withVideo
       })
       console.log('Got local stream')
+      
+      // Show local video preview
+      if (withVideo && localVideoRef && localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream.current
+        localVideoRef.current.muted = true // Mute to prevent echo
+        localVideoRef.current.play().catch(err => console.log('Local video play error:', err))
+      }
       
       const pc = initializePeerConnection(conversationId)
       
       localStream.current.getTracks().forEach(track => {
-        console.log('Adding local track to PC')
+        console.log('Adding local track to PC:', track.kind)
         pc.addTrack(track, localStream.current)
       })
       
@@ -147,39 +154,49 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
         offer: {
           type: pc.localDescription.type,
           sdp: pc.localDescription.sdp
-        }
+        },
+        withVideo: withVideo
       })
     } catch (err) {
       console.error('Error starting call:', err)
       isInCall.current = false
       setCallState('idle')
     }
-  }, [initializePeerConnection, sendMessage])
+  }, [initializePeerConnection, sendMessage, localVideoRef])
 
   const handleCallOffer = useCallback((data) => {
     if (isInCall.current) {
       console.log('Already in a call, ignoring incoming offer')
       return
     }
-    console.log('Received call offer')
+    console.log('Received call offer', data.withVideo ? 'with video' : 'audio only')
     isInCall.current = true
+    setIsVideoCall(data.withVideo || false)
     setIncomingCall(data)
     setCallState('receiving')
   }, [])
 
-  const acceptCall = useCallback(async (conversationId, offer) => {
+  const acceptCall = useCallback(async (conversationId, offer, withVideo = false) => {
     try {
-      console.log('Accepting call...')
+      console.log('Accepting call...', withVideo ? 'with video' : 'audio only')
       
       localStream.current = await navigator.mediaDevices.getUserMedia({ 
-        audio: true
+        audio: true,
+        video: withVideo
       })
       console.log('Got local stream for answer')
+      
+      // Show local video preview
+      if (withVideo && localVideoRef && localVideoRef.current) {
+        localVideoRef.current.srcObject = localStream.current
+        localVideoRef.current.muted = true
+        localVideoRef.current.play().catch(err => console.log('Local video play error:', err))
+      }
       
       const pc = initializePeerConnection(conversationId)
       
       localStream.current.getTracks().forEach(track => {
-        console.log('Adding local track to PC')
+        console.log('Adding local track to PC:', track.kind)
         pc.addTrack(track, localStream.current)
       })
       
@@ -187,7 +204,6 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
       await pc.setRemoteDescription(new RTCSessionDescription(offer))
       console.log('Remote description set')
       
-      // Process pending ICE candidates
       console.log(`Processing ${pendingCandidates.current.length} pending ICE candidates`)
       for (const candidate of pendingCandidates.current) {
         try {
@@ -221,7 +237,7 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
       isInCall.current = false
       setCallState('idle')
     }
-  }, [initializePeerConnection, sendMessage])
+  }, [initializePeerConnection, sendMessage, localVideoRef])
 
   const handleCallAnswer = useCallback(async (answer) => {
     try {
@@ -240,7 +256,6 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
       await peerConnection.current.setRemoteDescription(new RTCSessionDescription(answer))
       console.log('Remote description set')
       
-      // Process pending ICE candidates
       console.log(`Processing ${pendingCandidates.current.length} pending ICE candidates`)
       for (const candidate of pendingCandidates.current) {
         try {
@@ -305,6 +320,7 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     
     setCallState('idle')
     setIncomingCall(null)
+    setIsVideoCall(false)
   }, [sendMessage])
 
   const rejectCall = useCallback((conversationId) => {
@@ -315,12 +331,14 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     })
     setCallState('idle')
     setIncomingCall(null)
+    setIsVideoCall(false)
   }, [sendMessage])
 
   return {
     callState,
     callDuration,
     incomingCall,
+    isVideoCall,
     startCall,
     acceptCall,
     rejectCall,
