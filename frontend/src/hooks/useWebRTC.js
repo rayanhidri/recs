@@ -55,6 +55,7 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
 
   const initializePeerConnection = useCallback((conversationId) => {
     peerConnection.current = new RTCPeerConnection(ICE_SERVERS)
+    window.debugPC = peerConnection.current
     pendingCandidates.current = []
     
     peerConnection.current.onicecandidate = (event) => {
