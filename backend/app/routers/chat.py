@@ -98,10 +98,11 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = D
                         "conversation_id": conversation_id
                     })
             
-            # WebRTC Signaling for Audio Calls
+            # WebRTC Signaling for Audio/Video Calls
             elif data["type"] == "call_offer":
                 conversation_id = data["conversation_id"]
                 offer = data["offer"]
+                with_video = data.get("withVideo", False)
                 conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
                 recipient_id = conversation.user2_id if conversation.user1_id == user_id else conversation.user1_id
                 
@@ -110,7 +111,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = D
                         "type": "call_offer",
                         "conversation_id": conversation_id,
                         "offer": offer,
-                        "caller_id": user_id
+                        "caller_id": user_id,
+                        "withVideo": with_video
                     })
             
             elif data["type"] == "call_answer":
