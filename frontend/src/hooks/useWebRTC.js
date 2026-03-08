@@ -165,7 +165,7 @@ export default function useWebRTC(sendMessage, remoteAudioRef) {
     }
     console.log('Received call offer')
     isInCall.current = true
-    pendingCandidates.current = []
+    //pendingCandidates.current = []
     setIncomingCall(data)
     setCallState('receiving')
   }, [])
