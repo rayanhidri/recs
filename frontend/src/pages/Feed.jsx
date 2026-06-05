@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { getFeed, getDiscover, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed, getActivityClusters } from '../api'
+import { getFeed, getDiscover, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed, getActivityClusters, deleteRec } from '../api'
 import { getCategoryStyle } from '../utils/categoryColors'
 import Avatar from '../components/Avatar'
 
@@ -48,7 +48,7 @@ function QuotedCard({ rec, onNavigate }) {
   )
 }
 
-function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
+function Post({ post, onLike, onSave, onDelete, onNavigate, onQuoted }) {
   const { user: currentUser } = useAuth()
   const isOwn = currentUser && post.user_id === currentUser.id
   const [comments, setComments] = useState([])
@@ -205,9 +205,14 @@ function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
         </button>
         <button className="post-action-btn" onClick={() => setShowQuoteModal(true)} title="re-rec">↩</button>
         <button className="post-action-btn" onClick={openSendModal} title="send to chat">↗</button>
-        {isOwn && (
+        {isOwn && !isQuoteRec && (
           <button className="post-action-btn post-edit-btn" onClick={() => onNavigate(`/edit/${post.id}`)} title="edit">
             edit
+          </button>
+        )}
+        {isOwn && isQuoteRec && (
+          <button className="post-action-btn post-edit-btn" onClick={() => onDelete(post.id)} title="undo re-rec">
+            undo
           </button>
         )}
       </div>
@@ -420,6 +425,13 @@ export default function Feed() {
     } catch (err) { console.error(err) }
   }
 
+  const handleDelete = async (postId) => {
+    try {
+      await deleteRec(postId)
+      setItems(prev => prev.filter(item => item.id !== postId))
+    } catch (err) { console.error(err) }
+  }
+
   const handleSave = async (postId, isSaved) => {
     setItems(items.map(item =>
       item._kind === 'post' && item.id === postId ? { ...item, is_saved: !isSaved } : item
@@ -471,6 +483,7 @@ export default function Feed() {
             post={item}
             onLike={handleLike}
             onSave={handleSave}
+            onDelete={handleDelete}
             onNavigate={navigate}
             onQuoted={fetchFeed}
           />
