@@ -319,7 +319,7 @@ export default function Chat() {
                 onClick={() => navigate(`/profile/${activeConversation.other_username}`)}
               />
               <div className="chat-main-info">
-                <span className="chat-main-name">{activeConversation.other_username}</span>
+                <span className="chat-main-name" onClick={() => navigate(`/profile/${activeConversation.other_username}`)} style={{ cursor: 'pointer' }}>{activeConversation.other_username}</span>
               </div>
               <div className="chat-header-actions">
                 <button className="call-button" onClick={handleStartAudioCall} title="Audio call">call</button>

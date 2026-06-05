@@ -1310,12 +1310,9 @@ body {
 
 .chat-container {
   display: flex;
-  height: calc(100vh - 60px);
-  max-width: 960px;
-  margin: 0 auto;
+  height: calc(100vh - 61px);
+  width: 100%;
   background: #fff;
-  border-left: 1px solid #ebebeb;
-  border-right: 1px solid #ebebeb;
 }
 
 /* ─── Sidebar ─── */
