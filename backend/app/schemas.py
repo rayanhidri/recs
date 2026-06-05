@@ -84,6 +84,13 @@ class UserUpdate(BaseModel):
     bio: Optional[str] = None
     avatar: Optional[str] = None
 
+class RecUpdate(BaseModel):
+    category: Optional[str] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    link: Optional[str] = None
+    image: Optional[str] = None
+
 class CommentCreate(BaseModel):
     content: str
 

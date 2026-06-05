@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed, getActivityClusters } from '../api'
 import { getCategoryStyle } from '../utils/categoryColors'
 
@@ -49,6 +50,8 @@ function QuotedCard({ rec, onNavigate }) {
 }
 
 function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
+  const { user: currentUser } = useAuth()
+  const isOwn = currentUser && post.user_id === currentUser.id
   const [comments, setComments] = useState([])
   const [newComment, setNewComment] = useState('')
   const [loadingComments, setLoadingComments] = useState(true)
@@ -203,12 +206,13 @@ function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
         >
           {post.is_saved ? '◆' : '◇'}
         </button>
-        <button className="post-action-btn" onClick={() => setShowQuoteModal(true)} title="re-rec">
-          ↩
-        </button>
-        <button className="post-action-btn" onClick={openSendModal} title="send to chat">
-          ↗
-        </button>
+        <button className="post-action-btn" onClick={() => setShowQuoteModal(true)} title="re-rec">↩</button>
+        <button className="post-action-btn" onClick={openSendModal} title="send to chat">↗</button>
+        {isOwn && (
+          <button className="post-action-btn post-edit-btn" onClick={() => onNavigate(`/edit/${post.id}`)} title="edit">
+            edit
+          </button>
+        )}
       </div>
 
       <div className="comments-section">

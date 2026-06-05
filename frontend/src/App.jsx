@@ -10,6 +10,7 @@ import Notifications from './pages/Notifications'
 import Chat from './pages/Chat'
 import RecDetail from './pages/RecDetail'
 import Saves from './pages/Saves'
+import EditRec from './pages/EditRec'
 import './App.css'
 
 function ProtectedRoute({ children }) {
@@ -56,6 +57,7 @@ function AppContent() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:username" element={<Profile />} />
         <Route path="/saves" element={<Saves />} />
+        <Route path="/edit/:recId" element={<EditRec />} />
         <Route path="/rec/:recId" element={<RecDetail />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

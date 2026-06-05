@@ -4,7 +4,7 @@ from sqlalchemy import desc, func
 from typing import List
 from ..database import get_db
 from ..models import Rec, User, Follow, Like, Comment, Notification, Save
-from ..schemas import RecCreate, RecOut, CommentCreate, CommentOut
+from ..schemas import RecCreate, RecOut, RecUpdate, CommentCreate, CommentOut
 from ..auth import get_current_user_id
 
 router = APIRouter(prefix="/recs", tags=["recs"])
@@ -186,6 +186,22 @@ def delete_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depend
     db.delete(rec)
     db.commit()
     return {"message": "Rec deleted"}
+
+@router.patch("/{rec_id}", response_model=RecOut)
+def update_rec(rec_id: int, updates: RecUpdate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    rec = db.query(Rec).filter(Rec.id == rec_id).first()
+    if not rec:
+        raise HTTPException(status_code=404, detail="Rec not found")
+    if rec.user_id != user_id:
+        raise HTTPException(status_code=403, detail="Not your rec")
+
+    for field, value in updates.model_dump(exclude_none=True).items():
+        setattr(rec, field, value)
+
+    db.commit()
+    db.refresh(rec)
+    user = db.query(User).filter(User.id == user_id).first()
+    return get_rec_with_details(rec, user.username, db, user_id)
 
 @router.get("/{rec_id}", response_model=RecOut)
 def get_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):

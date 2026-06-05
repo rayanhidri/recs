@@ -1959,6 +1959,46 @@ body {
   background: #f0f0f0;
 }
 
+/* Edit rec */
+.edit-rec-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.edit-cancel-btn {
+  flex: 1;
+  padding: 12px;
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #666;
+}
+.edit-cancel-btn:hover { background: #f5f5f5; }
+.post-edit-btn {
+  font-size: 0.78rem;
+  color: #bbb;
+}
+.post-edit-btn:hover { color: #111; }
+.profile-rec-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+.edit-rec-btn {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  color: #aaa;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+.edit-rec-btn:hover { color: #111; }
+
 /* Taste clusters */
 .clusters-section {
   max-width: 600px;

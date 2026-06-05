@@ -313,12 +313,10 @@ export default function Profile() {
                 )}
               </div>
               {isOwnProfile && (
-                <button 
-                  className="delete-rec-btn"
-                  onClick={() => handleDeleteRec(rec.id)}
-                >
-                  ×
-                </button>
+                <div className="profile-rec-actions">
+                  <button className="edit-rec-btn" onClick={() => navigate(`/edit/${rec.id}`)}>edit</button>
+                  <button className="delete-rec-btn" onClick={() => handleDeleteRec(rec.id)}>×</button>
+                </div>
               )}
             </div>
           ))
