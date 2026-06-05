@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed } from '../api'
+import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed, getActivityClusters } from '../api'
 import { getCategoryStyle } from '../utils/categoryColors'
 
 function timeAgo(dateString) {
@@ -308,6 +308,39 @@ function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
   )
 }
 
+function ClusterCard({ cluster, onNavigate }) {
+  return (
+    <div className="cluster-card" onClick={() => onNavigate(`/rec/${cluster.rec_id}`)}>
+      <div className="cluster-card-img">
+        {cluster.rec_image
+          ? <img src={cluster.rec_image} alt={cluster.rec_title} />
+          : <div className="cluster-card-placeholder">{cluster.rec_category}</div>
+        }
+        <span className="cluster-category-pill" style={getCategoryStyle(cluster.rec_category)}>
+          {cluster.rec_category}
+        </span>
+      </div>
+      <p className="cluster-card-title">
+        {cluster.rec_title.length > 36 ? cluster.rec_title.slice(0, 36) + '…' : cluster.rec_title}
+      </p>
+      <div className="cluster-card-footer">
+        <div className="cluster-avatars">
+          {cluster.posters.slice(0, 4).map((p, i) => (
+            <img
+              key={i}
+              src={p.avatar || 'https://via.placeholder.com/22'}
+              alt={p.username}
+              title={p.username}
+              onClick={e => { e.stopPropagation(); onNavigate(`/profile/${p.username}`) }}
+            />
+          ))}
+        </div>
+        <span className="cluster-count">{cluster.count} into this</span>
+      </div>
+    </div>
+  )
+}
+
 function ActivitySignal({ event, onNavigate }) {
   const verb = event.type === 'like' ? 'liked' : 'commented on'
   const recLabel = event.rec_title
@@ -342,13 +375,15 @@ function ActivitySignal({ event, onNavigate }) {
 export default function Feed() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
+  const [clusters, setClusters] = useState([])
   const [loading, setLoading] = useState(true)
 
   const fetchFeed = async () => {
     try {
-      const [feedRes, activityRes] = await Promise.all([
+      const [feedRes, activityRes, clustersRes] = await Promise.all([
         getFeed(),
-        getActivityFeed().catch(() => ({ data: [] }))
+        getActivityFeed().catch(() => ({ data: [] })),
+        getActivityClusters().catch(() => ({ data: [] }))
       ])
 
       const posts = feedRes.data.map(p => ({ ...p, _kind: 'post' }))
@@ -359,6 +394,7 @@ export default function Feed() {
       )
 
       setItems(merged)
+      setClusters(clustersRes.data)
     } catch (err) {
       console.error(err)
     } finally {
@@ -407,6 +443,16 @@ export default function Feed() {
 
   return (
     <main className="feed">
+      {clusters.length > 0 && (
+        <div className="clusters-section">
+          <p className="clusters-label">also into this</p>
+          <div className="clusters-scroll">
+            {clusters.map((cluster, i) => (
+              <ClusterCard key={i} cluster={cluster} onNavigate={navigate} />
+            ))}
+          </div>
+        </div>
+      )}
       {items.map((item, i) =>
         item._kind === 'post' ? (
           <Post
