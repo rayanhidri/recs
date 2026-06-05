@@ -31,7 +31,7 @@ const StartChatButton = ({ userId, username }) => {
       onClick={handleStartChat}
       disabled={loading}
     >
-      {loading ? 'loading...' : `message ${username}`}
+      {loading ? '...' : 'message'}
     </button>
   );
 };
