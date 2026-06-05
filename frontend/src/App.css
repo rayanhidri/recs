@@ -2594,3 +2594,10 @@ body {
   color: #e53e3e;
   margin: 0;
 }
+
+.post-rerec-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}

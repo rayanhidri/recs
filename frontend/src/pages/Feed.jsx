@@ -203,7 +203,14 @@ function Post({ post, onLike, onSave, onDelete, onNavigate, onQuoted }) {
         >
           {post.is_saved ? '◆' : '◇'}
         </button>
-        <button className="post-action-btn" onClick={() => setShowQuoteModal(true)} title="re-rec">↩</button>
+        <button className="post-action-btn post-rerec-btn" onClick={() => setShowQuoteModal(true)} title="re-rec">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 2l4 4-4 4"/>
+            <path d="M3 11V9a4 4 0 014-4h14"/>
+            <path d="M7 22l-4-4 4-4"/>
+            <path d="M21 13v2a4 4 0 01-4 4H3"/>
+          </svg>
+        </button>
         <button className="post-action-btn" onClick={openSendModal} title="send to chat">↗</button>
         {isOwn && !isQuoteRec && (
           <button className="post-action-btn post-edit-btn" onClick={() => onNavigate(`/edit/${post.id}`)} title="edit">
