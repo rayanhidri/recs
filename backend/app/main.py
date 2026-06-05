@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
-from .routers import auth, recs, users, notifications, chat
+from .routers import auth, recs, users, notifications, chat, activity
 
 Base.metadata.create_all(bind=engine)
 
@@ -28,3 +28,4 @@ def root():
 
 app.include_router(notifications.router)
 app.include_router(chat.router)
+app.include_router(activity.router)

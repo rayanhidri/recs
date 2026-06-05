@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec } from '../api'
+import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed } from '../api'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -307,16 +307,62 @@ function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
   )
 }
 
+function ActivitySignal({ event, onNavigate }) {
+  const verb = event.type === 'like' ? 'liked' : 'commented on'
+  const recLabel = event.rec_title
+    ? `"${event.rec_title.length > 40 ? event.rec_title.slice(0, 40) + '…' : event.rec_title}"`
+    : 'a rec'
+
+  return (
+    <div className="activity-signal">
+      <img
+        src={event.actor_avatar || 'https://via.placeholder.com/22'}
+        alt={event.actor_username}
+        className="activity-avatar"
+        onClick={() => onNavigate(`/profile/${event.actor_username}`)}
+      />
+      <p className="activity-text">
+        <span className="activity-actor" onClick={() => onNavigate(`/profile/${event.actor_username}`)}>
+          {event.actor_username}
+        </span>
+        {' '}{verb}{' '}
+        <span className="activity-rec-link" onClick={() => onNavigate(`/rec/${event.rec_id}`)}>
+          {recLabel}
+        </span>
+        {event.rec_username && (
+          <> by <span className="activity-rec-owner" onClick={() => onNavigate(`/profile/${event.rec_username}`)}>{event.rec_username}</span></>
+        )}
+        <span className="activity-time"> · {timeAgo(event.created_at)}</span>
+      </p>
+    </div>
+  )
+}
+
 export default function Feed() {
   const navigate = useNavigate()
-  const [posts, setPosts] = useState([])
+  const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const fetchFeed = () => {
-    getFeed()
-      .then(res => setPosts(res.data))
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false))
+  const fetchFeed = async () => {
+    try {
+      const [feedRes, activityRes] = await Promise.all([
+        getFeed(),
+        getActivityFeed().catch(() => ({ data: [] }))
+      ])
+
+      const posts = feedRes.data.map(p => ({ ...p, _kind: 'post' }))
+      const signals = activityRes.data.map(a => ({ ...a, _kind: 'activity' }))
+
+      const merged = [...posts, ...signals].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      )
+
+      setItems(merged)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { fetchFeed() }, [])
@@ -324,26 +370,32 @@ export default function Feed() {
   const handleLike = async (postId, isLiked) => {
     try {
       if (isLiked) { await unlikeRec(postId) } else { await likeRec(postId) }
-      setPosts(posts.map(post =>
-        post.id === postId
-          ? { ...post, is_liked: !isLiked, likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1 }
-          : post
+      setItems(items.map(item =>
+        item._kind === 'post' && item.id === postId
+          ? { ...item, is_liked: !isLiked, likes_count: isLiked ? item.likes_count - 1 : item.likes_count + 1 }
+          : item
       ))
     } catch (err) { console.error(err) }
   }
 
   const handleSave = async (postId, isSaved) => {
-    setPosts(posts.map(post => post.id === postId ? { ...post, is_saved: !isSaved } : post))
+    setItems(items.map(item =>
+      item._kind === 'post' && item.id === postId ? { ...item, is_saved: !isSaved } : item
+    ))
     try {
       if (isSaved) { await unsaveRec(postId) } else { await saveRec(postId) }
     } catch (err) {
-      setPosts(posts.map(post => post.id === postId ? { ...post, is_saved: isSaved } : post))
+      setItems(items.map(item =>
+        item._kind === 'post' && item.id === postId ? { ...item, is_saved: isSaved } : item
+      ))
     }
   }
 
   if (loading) return <div className="loading">loading...</div>
 
-  if (posts.length === 0) {
+  const posts = items.filter(i => i._kind === 'post')
+
+  if (posts.length === 0 && items.length === 0) {
     return (
       <div className="empty-feed">
         <p>no recs yet</p>
@@ -354,9 +406,20 @@ export default function Feed() {
 
   return (
     <main className="feed">
-      {posts.map(post => (
-        <Post key={post.id} post={post} onLike={handleLike} onSave={handleSave} onNavigate={navigate} onQuoted={fetchFeed} />
-      ))}
+      {items.map((item, i) =>
+        item._kind === 'post' ? (
+          <Post
+            key={`post-${item.id}`}
+            post={item}
+            onLike={handleLike}
+            onSave={handleSave}
+            onNavigate={navigate}
+            onQuoted={fetchFeed}
+          />
+        ) : (
+          <ActivitySignal key={`activity-${item.type}-${item.rec_id}-${i}`} event={item} onNavigate={navigate} />
+        )
+      )}
     </main>
   )
 }

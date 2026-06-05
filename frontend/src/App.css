@@ -1955,6 +1955,48 @@ body {
   background: #f0f0f0;
 }
 
+/* Activity signals */
+.activity-signal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.activity-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  cursor: pointer;
+  opacity: 0.85;
+}
+.activity-text {
+  font-size: 0.82rem;
+  color: #999;
+  margin: 0;
+  line-height: 1.4;
+}
+.activity-actor {
+  color: #555;
+  font-weight: 500;
+  cursor: pointer;
+}
+.activity-actor:hover { color: #111; }
+.activity-rec-link {
+  color: #555;
+  cursor: pointer;
+}
+.activity-rec-link:hover { color: #111; text-decoration: underline; }
+.activity-rec-owner {
+  color: #555;
+  cursor: pointer;
+}
+.activity-rec-owner:hover { color: #111; }
+.activity-time { color: #bbb; }
+
 /* Save button */
 .post-save-btn {
   background: none;
