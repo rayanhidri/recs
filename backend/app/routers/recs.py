@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, func
 from typing import List
 from ..database import get_db
-from ..models import Rec, User, Follow, Like, Comment, Notification
+from ..models import Rec, User, Follow, Like, Comment, Notification, Save
 from ..schemas import RecCreate, RecOut, CommentCreate, CommentOut
 from ..auth import get_current_user_id
 
@@ -12,6 +12,7 @@ router = APIRouter(prefix="/recs", tags=["recs"])
 def get_rec_with_details(rec, username, db, user_id, resolve_quote=True):
     likes_count = db.query(func.count(Like.id)).filter(Like.rec_id == rec.id).scalar()
     is_liked = db.query(Like).filter(Like.user_id == user_id, Like.rec_id == rec.id).first() is not None
+    is_saved = db.query(Save).filter(Save.user_id == user_id, Save.rec_id == rec.id).first() is not None
     user = db.query(User).filter(User.username == username).first()
     user_avatar = user.avatar if user else ""
 
@@ -23,7 +24,7 @@ def get_rec_with_details(rec, username, db, user_id, resolve_quote=True):
             if orig_user:
                 quoted_rec = get_rec_with_details(original, orig_user.username, db, user_id, resolve_quote=False)
 
-    return RecOut(**rec.__dict__, username=username, likes_count=likes_count, is_liked=is_liked, user_avatar=user_avatar, quoted_rec=quoted_rec)
+    return RecOut(**rec.__dict__, username=username, likes_count=likes_count, is_liked=is_liked, is_saved=is_saved, user_avatar=user_avatar, quoted_rec=quoted_rec)
 
 @router.post("/", response_model=RecOut)
 def create_rec(rec: RecCreate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
@@ -138,6 +139,37 @@ def create_comment(rec_id: int, comment: CommentCreate, db: Session = Depends(ge
         username=user.username,
         user_avatar=user.avatar or ""
     )
+@router.post("/{rec_id}/save")
+def save_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    if not db.query(Rec).filter(Rec.id == rec_id).first():
+        raise HTTPException(status_code=404, detail="Rec not found")
+    if db.query(Save).filter(Save.user_id == user_id, Save.rec_id == rec_id).first():
+        raise HTTPException(status_code=400, detail="Already saved")
+    db.add(Save(user_id=user_id, rec_id=rec_id))
+    db.commit()
+    return {"message": "Saved"}
+
+@router.delete("/{rec_id}/save")
+def unsave_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    save = db.query(Save).filter(Save.user_id == user_id, Save.rec_id == rec_id).first()
+    if not save:
+        raise HTTPException(status_code=400, detail="Not saved")
+    db.delete(save)
+    db.commit()
+    return {"message": "Unsaved"}
+
+@router.get("/saved", response_model=List[RecOut])
+def get_saved_recs(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    saves = db.query(Save).filter(Save.user_id == user_id).order_by(desc(Save.created_at)).all()
+    results = []
+    for save in saves:
+        rec = db.query(Rec).filter(Rec.id == save.rec_id).first()
+        if rec:
+            user = db.query(User).filter(User.id == rec.user_id).first()
+            if user:
+                results.append(get_rec_with_details(rec, user.username, db, user_id))
+    return results
+
 @router.delete("/{rec_id}")
 def delete_rec(rec_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     rec = db.query(Rec).filter(Rec.id == rec_id).first()

@@ -55,6 +55,7 @@ class RecOut(BaseModel):
     user_avatar: str = ""
     quote_of_id: Optional[int] = None
     quoted_rec: Optional['RecOut'] = None
+    is_saved: bool = False
 
     class Config:
         from_attributes = True

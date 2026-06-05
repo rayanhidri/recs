@@ -9,6 +9,7 @@ import Signup from './pages/Signup'
 import Notifications from './pages/Notifications'
 import Chat from './pages/Chat'
 import RecDetail from './pages/RecDetail'
+import Saves from './pages/Saves'
 import './App.css'
 
 function ProtectedRoute({ children }) {
@@ -41,6 +42,7 @@ function AppContent() {
           <NavLink to="/create" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>+</NavLink>
           <NavLink to="/chat" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>messages</NavLink>
           <NavLink to="/notifications" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>notifications</NavLink>
+          <NavLink to="/saves" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>saved</NavLink>
           <NavLink to="/profile" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>profile</NavLink>
         </nav>
       </header>
@@ -53,6 +55,7 @@ function AppContent() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:username" element={<Profile />} />
+        <Route path="/saves" element={<Saves />} />
         <Route path="/rec/:recId" element={<RecDetail />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

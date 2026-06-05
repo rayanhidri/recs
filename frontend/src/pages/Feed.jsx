@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat } from '../api'
+import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec } from '../api'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -47,7 +47,7 @@ function QuotedCard({ rec, onNavigate }) {
   )
 }
 
-function Post({ post, onLike, onNavigate, onQuoted }) {
+function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
   const [comments, setComments] = useState([])
   const [newComment, setNewComment] = useState('')
   const [loadingComments, setLoadingComments] = useState(true)
@@ -195,6 +195,13 @@ function Post({ post, onLike, onNavigate, onQuoted }) {
         >
           {post.is_liked ? '♥' : '♡'} {post.likes_count > 0 && post.likes_count}
         </button>
+        <button
+          className={`post-save-btn ${post.is_saved ? 'is-saved' : ''}`}
+          onClick={() => onSave(post.id, post.is_saved)}
+          title={post.is_saved ? 'unsave' : 'save'}
+        >
+          {post.is_saved ? '◆' : '◇'}
+        </button>
         <button className="post-action-btn" onClick={() => setShowQuoteModal(true)} title="re-rec">
           ↩
         </button>
@@ -325,6 +332,15 @@ export default function Feed() {
     } catch (err) { console.error(err) }
   }
 
+  const handleSave = async (postId, isSaved) => {
+    setPosts(posts.map(post => post.id === postId ? { ...post, is_saved: !isSaved } : post))
+    try {
+      if (isSaved) { await unsaveRec(postId) } else { await saveRec(postId) }
+    } catch (err) {
+      setPosts(posts.map(post => post.id === postId ? { ...post, is_saved: isSaved } : post))
+    }
+  }
+
   if (loading) return <div className="loading">loading...</div>
 
   if (posts.length === 0) {
@@ -339,7 +355,7 @@ export default function Feed() {
   return (
     <main className="feed">
       {posts.map(post => (
-        <Post key={post.id} post={post} onLike={handleLike} onNavigate={navigate} onQuoted={fetchFeed} />
+        <Post key={post.id} post={post} onLike={handleLike} onSave={handleSave} onNavigate={navigate} onQuoted={fetchFeed} />
       ))}
     </main>
   )

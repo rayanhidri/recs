@@ -69,6 +69,9 @@ export const getRec = (recId) => api.get(`/recs/${recId}`)
 
 //Delete
 export const deleteRec = (recId) => api.delete(`/recs/${recId}`)
+export const saveRec = (recId) => api.post(`/recs/${recId}/save`)
+export const unsaveRec = (recId) => api.delete(`/recs/${recId}/save`)
+export const getSavedRecs = () => api.get('/recs/saved')
 
 // Chat
 export const getConversations = () => api.get('/chat/conversations')
