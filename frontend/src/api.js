@@ -74,6 +74,8 @@ export const deleteRec = (recId) => api.delete(`/recs/${recId}`)
 export const getConversations = () => api.get('/chat/conversations')
 export const getOrCreateConversation = (userId) => api.post(`/chat/conversations/${userId}`)
 export const getMessages = (conversationId) => api.get(`/chat/conversations/${conversationId}/messages`)
+export const shareRecToChat = (conversationId, recId) =>
+  api.post(`/chat/conversations/${conversationId}/messages`, { content: '', rec_id: recId })
 
 export const getWebSocketUrl = (userId) => {
   const wsBase = API_URL.replace('https://', 'wss://').replace('http://', 'ws://')

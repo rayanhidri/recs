@@ -2,10 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisco
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_, func
 from typing import Dict
-import json
 from datetime import datetime
 from ..database import get_db
-from ..models import User, Conversation, Message
+from ..models import User, Conversation, Message, Rec
 from ..schemas import MessageOut, ConversationOut, MessageCreate
 from ..auth import get_current_user_id
 
@@ -25,27 +24,37 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = D
             data = await websocket.receive_json()
             
             if data["type"] == "message":
-                # Save message to DB
                 conversation_id = data["conversation_id"]
                 content = data["content"]
-                
+                rec_id = data.get("rec_id")
+
                 message = Message(
                     conversation_id=conversation_id,
                     sender_id=user_id,
-                    content=content
+                    content=content,
+                    rec_id=rec_id
                 )
                 db.add(message)
-                
-                # Update conversation timestamp
+
                 conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
                 conversation.updated_at = datetime.utcnow()
                 db.commit()
                 db.refresh(message)
-                
-                # Get sender info
+
                 sender = db.query(User).filter(User.id == user_id).first()
-                
-                # Prepare message data
+
+                rec_data = {}
+                if rec_id:
+                    rec = db.query(Rec).filter(Rec.id == rec_id).first()
+                    if rec:
+                        rec_data = {
+                            "rec_id": rec.id,
+                            "rec_title": rec.title,
+                            "rec_image": rec.image or "",
+                            "rec_link": rec.link or "",
+                            "rec_category": rec.category
+                        }
+
                 message_data = {
                     "type": "message",
                     "id": message.id,
@@ -55,15 +64,14 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, db: Session = D
                     "is_read": False,
                     "created_at": message.created_at.isoformat(),
                     "sender_username": sender.username,
-                    "sender_avatar": sender.avatar or ""
+                    "sender_avatar": sender.avatar or "",
+                    **rec_data
                 }
-                
-                # Send to recipient if online
+
                 recipient_id = conversation.user2_id if conversation.user1_id == user_id else conversation.user1_id
                 if recipient_id in active_connections:
                     await active_connections[recipient_id].send_json(message_data)
-                
-                # Send back to sender for confirmation
+
                 await websocket.send_json(message_data)
             
             elif data["type"] == "typing":
@@ -249,6 +257,14 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db), user_id: i
     results = []
     for msg in messages:
         sender = db.query(User).filter(User.id == msg.sender_id).first()
+        rec_title = rec_image = rec_link = rec_category = None
+        if msg.rec_id:
+            rec = db.query(Rec).filter(Rec.id == msg.rec_id).first()
+            if rec:
+                rec_title = rec.title
+                rec_image = rec.image or ""
+                rec_link = rec.link or ""
+                rec_category = rec.category
         results.append(MessageOut(
             id=msg.id,
             conversation_id=msg.conversation_id,
@@ -257,7 +273,80 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db), user_id: i
             is_read=msg.is_read,
             created_at=msg.created_at,
             sender_username=sender.username,
-            sender_avatar=sender.avatar or ""
+            sender_avatar=sender.avatar or "",
+            rec_id=msg.rec_id,
+            rec_title=rec_title,
+            rec_image=rec_image,
+            rec_link=rec_link,
+            rec_category=rec_category
         ))
-    
+
     return results
+
+
+@router.post("/conversations/{conversation_id}/messages", response_model=MessageOut)
+async def send_message_rest(conversation_id: int, data: MessageCreate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
+    if not conversation:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    if user_id not in [conversation.user1_id, conversation.user2_id]:
+        raise HTTPException(status_code=403, detail="Not your conversation")
+
+    message = Message(
+        conversation_id=conversation_id,
+        sender_id=user_id,
+        content=data.content,
+        rec_id=data.rec_id
+    )
+    db.add(message)
+    conversation.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(message)
+
+    sender = db.query(User).filter(User.id == user_id).first()
+
+    rec_title = rec_image = rec_link = rec_category = None
+    if data.rec_id:
+        rec = db.query(Rec).filter(Rec.id == data.rec_id).first()
+        if rec:
+            rec_title = rec.title
+            rec_image = rec.image or ""
+            rec_link = rec.link or ""
+            rec_category = rec.category
+
+    message_data = {
+        "type": "message",
+        "id": message.id,
+        "conversation_id": conversation_id,
+        "sender_id": user_id,
+        "content": data.content,
+        "is_read": False,
+        "created_at": message.created_at.isoformat(),
+        "sender_username": sender.username,
+        "sender_avatar": sender.avatar or "",
+        "rec_id": data.rec_id,
+        "rec_title": rec_title,
+        "rec_image": rec_image,
+        "rec_link": rec_link,
+        "rec_category": rec_category
+    }
+
+    recipient_id = conversation.user2_id if conversation.user1_id == user_id else conversation.user1_id
+    if recipient_id in active_connections:
+        await active_connections[recipient_id].send_json(message_data)
+
+    return MessageOut(
+        id=message.id,
+        conversation_id=message.conversation_id,
+        sender_id=message.sender_id,
+        content=message.content,
+        is_read=message.is_read,
+        created_at=message.created_at,
+        sender_username=sender.username,
+        sender_avatar=sender.avatar or "",
+        rec_id=data.rec_id,
+        rec_title=rec_title,
+        rec_image=rec_image,
+        rec_link=rec_link,
+        rec_category=rec_category
+    )

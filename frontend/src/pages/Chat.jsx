@@ -339,7 +339,19 @@ export default function Chat() {
                       </div>
                     )}
                     <div className="msg-bubble">
-                      <p>{msg.content}</p>
+                      {msg.rec_id && (
+                        <div
+                          className="rec-message-card"
+                          onClick={() => msg.rec_link && window.open(msg.rec_link, '_blank')}
+                        >
+                          {msg.rec_image && <img src={msg.rec_image} alt={msg.rec_title} className="rec-msg-image" />}
+                          <div className="rec-msg-info">
+                            <span className="rec-msg-category">{msg.rec_category}</span>
+                            <p className="rec-msg-title">{msg.rec_title}</p>
+                          </div>
+                        </div>
+                      )}
+                      {msg.content && <p>{msg.content}</p>}
                     </div>
                     {isMine && (
                       <span className="msg-status">{msg.is_read ? 'seen' : ''}</span>

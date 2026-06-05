@@ -29,9 +29,9 @@ class Rec(Base):
     description = Column(Text, default="")
     link = Column(String(500), default="")
     image = Column(String(500), default="")
+    quote_of_id = Column(Integer, ForeignKey("recs.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    
-    
+
     user = relationship("User", back_populates="recs")
     likes = relationship("Like", back_populates="rec")
 
@@ -104,6 +104,7 @@ class Message(Base):
     sender_id = Column(Integer, ForeignKey("users.id"))
     content = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False)
+    rec_id = Column(Integer, ForeignKey("recs.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     conversation = relationship("Conversation", back_populates="messages")

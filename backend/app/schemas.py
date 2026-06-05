@@ -34,10 +34,11 @@ class UserOut(BaseModel):
 # Rec
 class RecCreate(BaseModel):
     category: str
-    title: str
+    title: str = ""
     description: str = ""
     link: str = ""
     image: str = ""
+    quote_of_id: Optional[int] = None
 
 class RecOut(BaseModel):
     id: int
@@ -48,12 +49,17 @@ class RecOut(BaseModel):
     link: str
     image: str
     created_at: datetime
-    username: str | None = None
+    username: Optional[str] = None
     likes_count: int = 0
     is_liked: bool = False
+    user_avatar: str = ""
+    quote_of_id: Optional[int] = None
+    quoted_rec: Optional['RecOut'] = None
 
     class Config:
         from_attributes = True
+
+RecOut.model_rebuild()
 
 # Follow
 class FollowOut(BaseModel):
@@ -69,30 +75,14 @@ class UserProfile(BaseModel):
     tuned_in: int
     tuned_to: int
     is_following: bool = False
+    streak: int = 0
 
     class Config:
         from_attributes = True
 
 class UserUpdate(BaseModel):
-    bio: str | None = None
-    avatar: str | None = None
-    
-class RecOut(BaseModel):
-    id: int
-    user_id: int
-    category: str
-    title: str
-    description: str
-    link: str
-    image: str
-    created_at: datetime
-    username: str | None = None
-    likes_count: int = 0
-    is_liked: bool = False
-    user_avatar: str = ""
-
-    class Config:
-        from_attributes = True
+    bio: Optional[str] = None
+    avatar: Optional[str] = None
 
 class CommentCreate(BaseModel):
     content: str
@@ -112,7 +102,7 @@ class CommentOut(BaseModel):
 class NotificationOut(BaseModel):
     id: int
     type: str
-    rec_id: int | None
+    rec_id: Optional[int]
     is_read: bool
     created_at: datetime
     from_username: str
@@ -124,6 +114,7 @@ class NotificationOut(BaseModel):
 # Chat / Messages
 class MessageCreate(BaseModel):
     content: str
+    rec_id: Optional[int] = None
 
 class MessageOut(BaseModel):
     id: int
@@ -134,6 +125,11 @@ class MessageOut(BaseModel):
     created_at: datetime
     sender_username: str
     sender_avatar: str = ""
+    rec_id: Optional[int] = None
+    rec_title: Optional[str] = None
+    rec_image: Optional[str] = None
+    rec_link: Optional[str] = None
+    rec_category: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -144,7 +140,7 @@ class ConversationOut(BaseModel):
     other_username: str
     other_avatar: str
     last_message: str = ""
-    last_message_time: datetime | None = None
+    last_message_time: Optional[datetime] = None
     unread_count: int = 0
 
     class Config:

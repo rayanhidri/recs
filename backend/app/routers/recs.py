@@ -9,12 +9,21 @@ from ..auth import get_current_user_id
 
 router = APIRouter(prefix="/recs", tags=["recs"])
 
-def get_rec_with_details(rec, username, db, user_id):
+def get_rec_with_details(rec, username, db, user_id, resolve_quote=True):
     likes_count = db.query(func.count(Like.id)).filter(Like.rec_id == rec.id).scalar()
     is_liked = db.query(Like).filter(Like.user_id == user_id, Like.rec_id == rec.id).first() is not None
     user = db.query(User).filter(User.username == username).first()
     user_avatar = user.avatar if user else ""
-    return RecOut(**rec.__dict__, username=username, likes_count=likes_count, is_liked=is_liked, user_avatar=user_avatar)
+
+    quoted_rec = None
+    if resolve_quote and rec.quote_of_id:
+        original = db.query(Rec).filter(Rec.id == rec.quote_of_id).first()
+        if original:
+            orig_user = db.query(User).filter(User.id == original.user_id).first()
+            if orig_user:
+                quoted_rec = get_rec_with_details(original, orig_user.username, db, user_id, resolve_quote=False)
+
+    return RecOut(**rec.__dict__, username=username, likes_count=likes_count, is_liked=is_liked, user_avatar=user_avatar, quoted_rec=quoted_rec)
 
 @router.post("/", response_model=RecOut)
 def create_rec(rec: RecCreate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
