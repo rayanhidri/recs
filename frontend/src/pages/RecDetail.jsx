@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getRec, likeRec, unlikeRec, getComments, createComment } from '../api'
+import { getCategoryStyle } from '../utils/categoryColors'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -98,7 +99,7 @@ export default function RecDetail() {
             <div className="post-user-info">
               <span className="post-username">{rec.username}</span>
               <div className="post-meta">
-                <span className="post-category">{rec.category}</span>
+                <span className="post-category" style={getCategoryStyle(rec.category)}>{rec.category}</span>
                 <span className="post-time">{timeAgo(rec.created_at)}</span>
               </div>
             </div>

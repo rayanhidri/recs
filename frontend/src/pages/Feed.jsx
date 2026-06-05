@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed } from '../api'
+import { getCategoryStyle } from '../utils/categoryColors'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -33,7 +34,7 @@ function QuotedCard({ rec, onNavigate }) {
         <span className="quoted-rec-username" onClick={(e) => { e.stopPropagation(); onNavigate(`/profile/${rec.username}`) }}>
           {rec.username}
         </span>
-        <span className="quoted-rec-category">{rec.category}</span>
+        <span className="quoted-rec-category" style={getCategoryStyle(rec.category)}>{rec.category}</span>
       </div>
       <div className="quoted-rec-body">
         {rec.image && <img src={rec.image} alt={rec.title} className="quoted-rec-image" />}
@@ -139,7 +140,7 @@ function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
           <div className="post-user-info">
             <span className="post-username">{isQuoteRec ? post.quoted_rec.username : post.username}</span>
             <div className="post-meta">
-              <span className="post-category">{isQuoteRec ? post.quoted_rec.category : post.category}</span>
+              <span className="post-category" style={getCategoryStyle(isQuoteRec ? post.quoted_rec.category : post.category)}>{isQuoteRec ? post.quoted_rec.category : post.category}</span>
               <span className="post-time">{timeAgo(post.created_at)}</span>
             </div>
           </div>

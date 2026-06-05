@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing, deleteRec, getPinnedRecs, getMyPinnedRecs, updatePinnedRecs } from '../api'
+import { getCategoryStyle } from '../utils/categoryColors'
 import { useAuth } from '../context/AuthContext'
 import StartChatButton from '../components/StartChatButton'
 
@@ -274,7 +275,7 @@ export default function Profile() {
                     }
                   </div>
                   <p className="pinned-card-title">{rec.title}</p>
-                  <span className="pinned-card-category">{rec.category}</span>
+                  <span className="pinned-card-category" style={getCategoryStyle(rec.category)}>{rec.category}</span>
                 </div>
               ))}
               {isOwnProfile && pinned.length < 3 && [...Array(3 - pinned.length)].map((_, i) => (
@@ -302,7 +303,7 @@ export default function Profile() {
                 />
               )}
               <div className="profile-rec-info">
-                <span className="profile-rec-type">{rec.category}</span>
+                <span className="profile-rec-type" style={getCategoryStyle(rec.category)}>{rec.category}</span>
                 <h3 className="profile-rec-title">{rec.title}</h3>
                 {rec.description && <p className="profile-rec-desc">{rec.description}</p>}
                 {rec.link && (

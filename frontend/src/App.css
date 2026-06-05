@@ -342,7 +342,11 @@ body {
 }
 
 .profile-rec-type {
-  font-size: 0.75rem;
+  display: inline-block;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #f0f0f0;
   color: #888;
 }
 
@@ -2052,10 +2056,12 @@ body {
   text-overflow: ellipsis;
 }
 .pinned-card-category {
-  font-size: 0.7rem;
-  color: #bbb;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  display: inline-block;
+  font-size: 0.68rem;
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: #f0f0f0;
+  color: #aaa;
 }
 
 /* Pin picker modal */
@@ -2311,7 +2317,11 @@ body {
 }
 .quoted-rec-username:hover { text-decoration: underline; }
 .quoted-rec-category {
-  font-size: 0.75rem;
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 1px 7px;
+  border-radius: 8px;
+  background: #f0f0f0;
   color: #999;
   margin-left: auto;
 }
