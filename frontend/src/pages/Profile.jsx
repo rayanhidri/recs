@@ -226,15 +226,15 @@ export default function Profile() {
             <button className="edit-button" onClick={() => setEditing(true)}>edit profile</button>
           )
         ) : (
-          <>
-            <button 
+          <div className="profile-actions">
+            <button
               className={`tune-button ${user.is_following ? 'tuned' : ''}`}
               onClick={handleFollow}
             >
               {user.is_following ? 'tuned' : 'tune in'}
             </button>
             <StartChatButton userId={user.id} username={user.username} />
-          </>
+          </div>
         )}
       </div>
 

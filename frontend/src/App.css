@@ -214,9 +214,15 @@ body {
   color: #888;
 }
 
-.tune-button {
+.profile-actions {
+  display: flex;
+  gap: 8px;
   margin-top: 16px;
-  padding: 10px 32px;
+  align-items: center;
+}
+
+.tune-button {
+  padding: 10px 28px;
   background: #111;
   color: #fff;
   border: none;
@@ -224,17 +230,37 @@ body {
   font-family: inherit;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s;
 }
 
-.tune-button:hover {
-  background: #333;
-}
+.tune-button:hover { background: #333; }
 
 .tune-button.tuned {
   background: #fff;
   color: #111;
   border: 1px solid #ddd;
+}
+
+.start-chat-btn {
+  padding: 10px 28px;
+  background: #fff;
+  color: #111;
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.start-chat-btn:hover {
+  border-color: #aaa;
+  background: #fafafa;
+}
+
+.start-chat-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 /* avatar edit */
