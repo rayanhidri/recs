@@ -1,8 +1,18 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getConversations, getMessages, getMe } from '../api'
 import useWebSocket from '../hooks/useWebSocket'
 import useWebRTC from '../hooks/useWebRTC'
+
+function formatDateDivider(dateString) {
+  const date = new Date(dateString)
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(yesterday.getDate() - 1)
+  if (date.toDateString() === today.toDateString()) return 'today'
+  if (date.toDateString() === yesterday.toDateString()) return 'yesterday'
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -310,15 +320,10 @@ export default function Chat() {
               />
               <div className="chat-main-info">
                 <span className="chat-main-name">{activeConversation.other_username}</span>
-                {isConnected && <span className="chat-main-status">active now</span>}
               </div>
               <div className="chat-header-actions">
-                <button className="call-button" onClick={handleStartAudioCall} title="Audio call">
-                  📞
-                </button>
-                <button className="call-button" onClick={handleStartVideoCall} title="Video call">
-                  📹
-                </button>
+                <button className="call-button" onClick={handleStartAudioCall} title="Audio call">call</button>
+                <button className="call-button" onClick={handleStartVideoCall} title="Video call">video</button>
               </div>
             </div>
 
@@ -326,9 +331,14 @@ export default function Chat() {
               {messages.map((msg, index) => {
                 const isMine = msg.sender_id === me?.id
                 const showAvatar = !isMine && (index === 0 || messages[index - 1]?.sender_id !== msg.sender_id)
-                
+                const msgDay = new Date(msg.created_at).toDateString()
+                const prevDay = index > 0 ? new Date(messages[index - 1].created_at).toDateString() : null
+                const showDivider = index === 0 || msgDay !== prevDay
+
                 return (
-                  <div key={msg.id} className={`msg ${isMine ? 'msg-sent' : 'msg-received'}`}>
+                  <React.Fragment key={msg.id}>
+                  {showDivider && <div className="date-divider">{formatDateDivider(msg.created_at)}</div>}
+                  <div className={`msg ${isMine ? 'msg-sent' : 'msg-received'}`}>
                     {!isMine && (
                       <div className="msg-avatar-col">
                         {showAvatar ? (
@@ -357,6 +367,7 @@ export default function Chat() {
                       <span className="msg-status">{msg.is_read ? 'seen' : ''}</span>
                     )}
                   </div>
+                  </React.Fragment>
                 )
               })}
               
@@ -379,12 +390,10 @@ export default function Chat() {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleTyping}
-                placeholder="Message..."
+                placeholder="message..."
                 className="chat-input"
               />
-              <button type="submit" className="chat-send" disabled={!newMessage.trim()}>
-                Send
-              </button>
+              <button type="submit" className="chat-send" disabled={!newMessage.trim()}>↑</button>
             </form>
           </>
         ) : (
