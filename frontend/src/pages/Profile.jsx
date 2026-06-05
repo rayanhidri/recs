@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing, deleteRec, getPinnedRecs, getMyPinnedRecs, updatePinnedRecs } from '../api'
+import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing, deleteRec, getPinnedRecs, getMyPinnedRecs, updatePinnedRecs, deleteAccount, logout } from '../api'
 import { getCategoryStyle } from '../utils/categoryColors'
 import Avatar from '../components/Avatar'
 import { useAuth } from '../context/AuthContext'
@@ -26,6 +26,8 @@ export default function Profile() {
   const [showPinModal, setShowPinModal] = useState(false)
   const [selectedPins, setSelectedPins] = useState([])
   const [savingPins, setSavingPins] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const isOwnProfile = !username || username === currentUser?.username
 
@@ -143,6 +145,19 @@ export default function Profile() {
     }
   }
 
+  const handleDeleteAccount = async () => {
+    setDeleting(true)
+    try {
+      await deleteAccount()
+      logout()
+      setUser(null)
+      navigate('/login')
+    } catch (err) {
+      console.error(err)
+      setDeleting(false)
+    }
+  }
+
   const handleDeleteRec = async (recId) => {
     if (window.confirm('delete this rec?')) {
       try {
@@ -250,6 +265,9 @@ export default function Profile() {
               <button className="save-button" onClick={handleSave}>save</button>
               <button className="cancel-button" onClick={() => setEditing(false)}>cancel</button>
             </div>
+            <button className="delete-account-btn" onClick={() => setShowDeleteModal(true)}>
+              delete account
+            </button>
           ) : (
             <button className="edit-button" onClick={() => setEditing(true)}>edit profile</button>
           )
@@ -343,6 +361,23 @@ export default function Profile() {
           ))
         )}
       </div>
+
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
+          <div className="modal delete-modal" onClick={e => e.stopPropagation()}>
+            <h3>delete account</h3>
+            <p>this will permanently delete your profile, all your recs, and everything else. there's no going back.</p>
+            <div className="delete-modal-actions">
+              <button className="cancel-button" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
+                cancel
+              </button>
+              <button className="delete-confirm-btn" onClick={handleDeleteAccount} disabled={deleting}>
+                {deleting ? 'deleting...' : 'yes, delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showPinModal && (
         <div className="modal-overlay" onClick={() => setShowPinModal(false)}>

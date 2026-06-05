@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from typing import List
 from pydantic import BaseModel
 from ..database import get_db
-from ..models import User, Follow, Rec, PinnedRec, Like, Save
+from ..models import User, Follow, Rec, PinnedRec, Like, Save, Comment, Notification, Conversation, Message
 from ..schemas import UserProfile, UserUpdate, RecOut
 from ..auth import get_current_user_id
 
@@ -255,3 +255,66 @@ def update_pinned(body: PinnedRecsUpdate, db: Session = Depends(get_db), current
         db.add(PinnedRec(user_id=current_user_id, rec_id=rec_id))
     db.commit()
     return {"message": "Pinned updated"}
+
+
+@router.delete("/me")
+def delete_account(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    user = db.query(User).filter(User.id == current_user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    rec_ids = [r[0] for r in db.query(Rec.id).filter(Rec.user_id == current_user_id).all()]
+
+    # Notifications involving this user or their recs
+    notif_filter = or_(Notification.user_id == current_user_id, Notification.from_user_id == current_user_id)
+    if rec_ids:
+        notif_filter = or_(notif_filter, Notification.rec_id.in_(rec_ids))
+    db.query(Notification).filter(notif_filter).delete(synchronize_session=False)
+
+    # Re-recs of this user's recs (recs that quote their recs)
+    if rec_ids:
+        quote_rec_ids = [r[0] for r in db.query(Rec.id).filter(Rec.quote_of_id.in_(rec_ids)).all()]
+        if quote_rec_ids:
+            db.query(Like).filter(Like.rec_id.in_(quote_rec_ids)).delete(synchronize_session=False)
+            db.query(Comment).filter(Comment.rec_id.in_(quote_rec_ids)).delete(synchronize_session=False)
+            db.query(Save).filter(Save.rec_id.in_(quote_rec_ids)).delete(synchronize_session=False)
+            db.query(PinnedRec).filter(PinnedRec.rec_id.in_(quote_rec_ids)).delete(synchronize_session=False)
+            db.query(Rec).filter(Rec.id.in_(quote_rec_ids)).delete(synchronize_session=False)
+
+    # Saves, pins, likes, comments on this user's recs (by others)
+    save_filter = Save.user_id == current_user_id
+    pin_filter = PinnedRec.user_id == current_user_id
+    like_filter = Like.user_id == current_user_id
+    comment_filter = Comment.user_id == current_user_id
+    if rec_ids:
+        save_filter = or_(save_filter, Save.rec_id.in_(rec_ids))
+        pin_filter = or_(pin_filter, PinnedRec.rec_id.in_(rec_ids))
+        like_filter = or_(like_filter, Like.rec_id.in_(rec_ids))
+        comment_filter = or_(comment_filter, Comment.rec_id.in_(rec_ids))
+        db.query(Message).filter(Message.rec_id.in_(rec_ids)).update({"rec_id": None}, synchronize_session=False)
+
+    db.query(Save).filter(save_filter).delete(synchronize_session=False)
+    db.query(PinnedRec).filter(pin_filter).delete(synchronize_session=False)
+    db.query(Like).filter(like_filter).delete(synchronize_session=False)
+    db.query(Comment).filter(comment_filter).delete(synchronize_session=False)
+
+    # Follows
+    db.query(Follow).filter(
+        or_(Follow.follower_id == current_user_id, Follow.following_id == current_user_id)
+    ).delete(synchronize_session=False)
+
+    # Conversations and their messages
+    conv_ids = [c[0] for c in db.query(Conversation.id).filter(
+        or_(Conversation.user1_id == current_user_id, Conversation.user2_id == current_user_id)
+    ).all()]
+    if conv_ids:
+        db.query(Message).filter(Message.conversation_id.in_(conv_ids)).delete(synchronize_session=False)
+        db.query(Conversation).filter(Conversation.id.in_(conv_ids)).delete(synchronize_session=False)
+
+    # User's recs
+    db.query(Rec).filter(Rec.user_id == current_user_id).delete(synchronize_session=False)
+
+    # User
+    db.delete(user)
+    db.commit()
+    return {"message": "Account deleted"}

@@ -2601,3 +2601,51 @@ body {
   justify-content: center;
   line-height: 1;
 }
+
+/* Delete account */
+.delete-account-btn {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 0.78rem;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 12px;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.delete-account-btn:hover { color: #e53e3e; }
+
+.delete-modal {
+  max-width: 360px;
+  width: 90%;
+}
+.delete-modal h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.delete-modal p {
+  font-size: 0.82rem;
+  color: #888;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+.delete-modal-actions {
+  display: flex;
+  gap: 10px;
+}
+.delete-confirm-btn {
+  flex: 1;
+  padding: 10px;
+  background: #e53e3e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.delete-confirm-btn:hover { background: #c53030; }
+.delete-confirm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
