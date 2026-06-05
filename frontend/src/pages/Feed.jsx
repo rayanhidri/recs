@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed, getActivityClusters } from '../api'
+import { getFeed, getDiscover, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed, getActivityClusters } from '../api'
 import { getCategoryStyle } from '../utils/categoryColors'
 import Avatar from '../components/Avatar'
 
@@ -374,6 +374,7 @@ export default function Feed() {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [clusters, setClusters] = useState([])
+  const [isDiscover, setIsDiscover] = useState(false)
   const [loading, setLoading] = useState(true)
 
   const fetchFeed = async () => {
@@ -386,12 +387,18 @@ export default function Feed() {
 
       const posts = feedRes.data.map(p => ({ ...p, _kind: 'post' }))
       const signals = activityRes.data.map(a => ({ ...a, _kind: 'activity' }))
-
       const merged = [...posts, ...signals].sort(
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       )
 
-      setItems(merged)
+      if (merged.length === 0) {
+        const discoverRes = await getDiscover().catch(() => ({ data: [] }))
+        setItems(discoverRes.data.map(p => ({ ...p, _kind: 'post' })))
+        setIsDiscover(true)
+      } else {
+        setItems(merged)
+        setIsDiscover(false)
+      }
       setClusters(clustersRes.data)
     } catch (err) {
       console.error(err)
@@ -441,6 +448,12 @@ export default function Feed() {
 
   return (
     <main className="feed">
+      {isDiscover && (
+        <div className="discover-header">
+          <span>discover</span>
+          <p>tune into people to build your feed</p>
+        </div>
+      )}
       {clusters.length > 0 && (
         <div className="clusters-section">
           <p className="clusters-label">also into this</p>

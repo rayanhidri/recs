@@ -2543,3 +2543,22 @@ body {
 @media (max-width: 768px) {
   .chat-back-btn { display: block; }
 }
+
+/* Discover header */
+.discover-header {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 24px 4px;
+}
+.discover-header span {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #bbb;
+}
+.discover-header p {
+  font-size: 0.8rem;
+  color: #ccc;
+  margin-top: 2px;
+}

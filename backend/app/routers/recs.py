@@ -42,7 +42,13 @@ def get_feed(db: Session = Depends(get_db), user_id: int = Depends(get_current_u
     recs = db.query(Rec, User.username).join(User).filter(
         (Rec.user_id.in_(following_ids)) | (Rec.user_id == user_id)
     ).order_by(desc(Rec.created_at)).offset(skip).limit(limit).all()
-    
+    return [get_rec_with_details(rec, username, db, user_id) for rec, username in recs]
+
+@router.get("/discover", response_model=List[RecOut])
+def get_discover(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    recs = db.query(Rec, User.username).join(User).filter(
+        Rec.quote_of_id == None
+    ).order_by(desc(Rec.created_at)).limit(40).all()
     return [get_rec_with_details(rec, username, db, user_id) for rec, username in recs]
 @router.get("/user/{username}", response_model=List[RecOut])
 def get_user_recs(username: str, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id), skip: int = 0, limit: int = 20):

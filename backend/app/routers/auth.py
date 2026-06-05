@@ -5,13 +5,26 @@ from sqlalchemy.orm import Session
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from ..database import get_db
-from ..models import User
+from ..models import User, Follow
 from ..schemas import UserCreate, Token, UserOut, GoogleAuthRequest
 from ..auth import hash_password, verify_password, create_access_token
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+CREATOR_USERNAME = os.getenv("CREATOR_USERNAME", "rayan")
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+def auto_follow_creator(new_user_id: int, db: Session):
+    creator = db.query(User).filter(User.username == CREATOR_USERNAME).first()
+    if not creator or creator.id == new_user_id:
+        return
+    already = db.query(Follow).filter(
+        Follow.follower_id == new_user_id,
+        Follow.following_id == creator.id
+    ).first()
+    if not already:
+        db.add(Follow(follower_id=new_user_id, following_id=creator.id))
+        db.commit()
 
 @router.post("/signup", response_model=UserOut)
 def signup(user: UserCreate, db: Session = Depends(get_db)):
@@ -28,6 +41,7 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    auto_follow_creator(new_user.id, db)
     return new_user
 
 @router.post("/login", response_model=Token)
@@ -70,6 +84,7 @@ def google_auth(body: GoogleAuthRequest, db: Session = Depends(get_db)):
         db.add(user)
         db.commit()
         db.refresh(user)
+        auto_follow_creator(user.id, db)
 
     token = create_access_token({"user_id": user.id})
     return {"access_token": token, "token_type": "bearer"}

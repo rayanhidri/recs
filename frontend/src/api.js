@@ -52,6 +52,7 @@ export const getFollowing = (username) => api.get(`/users/${username}/following`
 // Recs
 export const createRec = (data) => api.post('/recs/', data)
 export const getFeed = () => api.get('/recs/feed')
+export const getDiscover = () => api.get('/recs/discover')
 export const getUserRecs = (username) => api.get(`/recs/user/${username}`)
 export const likeRec = (recId) => api.post(`/recs/${recId}/like`)
 export const unlikeRec = (recId) => api.delete(`/recs/${recId}/like`)
