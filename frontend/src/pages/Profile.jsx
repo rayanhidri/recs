@@ -197,52 +197,11 @@ export default function Profile() {
     <div className="profile">
       <div className="profile-header">
         <div className="avatar-container">
-          {editing ? (
-            <div className="avatar-edit">
-              <Avatar avatar={avatar} username={user?.username} className="profile-avatar" />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="file-input"
-                id="avatar-upload"
-              />
-              <label htmlFor="avatar-upload" className="upload-button">
-                {uploading ? 'uploading...' : 'choose photo'}
-              </label>
-            </div>
-          ) : (
-            <Avatar avatar={user.avatar} username={user.username} className="profile-avatar" />
-          )}
+          <Avatar avatar={user.avatar} username={user.username} className="profile-avatar" />
         </div>
-        
-        {editing ? (
-          <div className="edit-username-wrapper">
-            <input
-              type="text"
-              value={editUsername}
-              onChange={(e) => { setEditUsername(e.target.value); setUsernameError('') }}
-              className="edit-username-input"
-              placeholder="username"
-              maxLength={30}
-            />
-            {usernameError && <p className="username-error">{usernameError}</p>}
-          </div>
-        ) : (
-          <h2 className="profile-username">{user.username}</h2>
-        )}
 
-        {editing ? (
-          <textarea
-            placeholder="write your bio..."
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            className="edit-bio"
-            rows={3}
-          />
-        ) : (
-          <p className="profile-bio">{user.bio || 'no bio yet'}</p>
-        )}
+        <h2 className="profile-username">{user.username}</h2>
+        <p className="profile-bio">{user.bio || 'no bio yet'}</p>
         
         <div className="profile-stats">
           <div className="stat">
@@ -260,17 +219,7 @@ export default function Profile() {
         </div>
 
         {isOwnProfile ? (
-          editing ? (
-            <div className="edit-buttons">
-              <button className="save-button" onClick={handleSave}>save</button>
-              <button className="cancel-button" onClick={() => setEditing(false)}>cancel</button>
-            </div>
-            <button className="delete-account-btn" onClick={() => setShowDeleteModal(true)}>
-              delete account
-            </button>
-          ) : (
-            <button className="edit-button" onClick={() => setEditing(true)}>edit profile</button>
-          )
+          <button className="edit-button" onClick={() => setEditing(true)}>edit profile</button>
         ) : (
           <div className="profile-actions">
             <button
@@ -440,6 +389,65 @@ export default function Profile() {
                 ))
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit profile slide-in panel — always mounted, slides in/out */}
+      {isOwnProfile && (
+        <div className={`edit-profile-panel ${editing ? 'open' : ''}`}>
+          <div className="edit-panel-header">
+            <button className="edit-panel-back" onClick={() => { setEditing(false); setUsernameError('') }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <span className="edit-panel-title">edit profile</span>
+            <button className="edit-panel-save" onClick={handleSave}>
+              save
+            </button>
+          </div>
+
+          <div className="edit-panel-body">
+            {/* Photo */}
+            <div className="edit-panel-photo">
+              <Avatar avatar={avatar} username={user?.username} className="edit-panel-avatar" />
+              <input type="file" accept="image/*" onChange={handleImageUpload} className="file-input" id="panel-avatar-upload" />
+              <label htmlFor="panel-avatar-upload" className="edit-panel-photo-btn">
+                {uploading ? 'uploading...' : 'change photo'}
+              </label>
+            </div>
+
+            {/* Username */}
+            <div className="edit-panel-field">
+              <label className="edit-panel-label">username</label>
+              <input
+                type="text"
+                value={editUsername}
+                onChange={(e) => { setEditUsername(e.target.value); setUsernameError('') }}
+                className="edit-panel-input"
+                placeholder="username"
+                maxLength={30}
+                autoCapitalize="none"
+              />
+              {usernameError && <p className="edit-panel-error">{usernameError}</p>}
+            </div>
+
+            {/* Bio */}
+            <div className="edit-panel-field">
+              <label className="edit-panel-label">bio</label>
+              <textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                className="edit-panel-input edit-panel-textarea"
+                placeholder="write something..."
+                rows={4}
+              />
+            </div>
+
+            <button className="delete-account-btn" onClick={() => setShowDeleteModal(true)}>
+              delete account
+            </button>
           </div>
         </div>
       )}

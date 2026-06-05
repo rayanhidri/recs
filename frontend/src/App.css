@@ -2649,3 +2649,143 @@ body {
 }
 .delete-confirm-btn:hover { background: #c53030; }
 .delete-confirm-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ─── Edit profile slide-in panel ─── */
+.edit-profile-panel {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.edit-profile-panel.open {
+  transform: translateX(0);
+}
+
+.edit-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 56px;
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.edit-panel-back {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-panel-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.edit-panel-save {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: opacity 0.15s;
+}
+.edit-panel-save:hover { opacity: 0.6; }
+
+.edit-panel-body {
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px;
+  gap: 28px;
+  max-width: 480px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Photo section */
+.edit-panel-photo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.edit-panel-avatar {
+  width: 88px !important;
+  height: 88px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  font-size: 2rem;
+}
+
+.edit-panel-photo-btn {
+  font-size: 0.82rem;
+  color: #111;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  transition: border-color 0.15s;
+}
+.edit-panel-photo-btn:hover { border-color: #aaa; }
+
+/* Fields */
+.edit-panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-panel-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #aaa;
+}
+
+.edit-panel-input {
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  border-bottom: 1px solid #e8e8e8;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: #111;
+  background: transparent;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.edit-panel-input:focus { border-bottom-color: #111; }
+
+.edit-panel-textarea {
+  resize: none;
+  line-height: 1.5;
+}
+
+.edit-panel-error {
+  font-size: 0.78rem;
+  color: #e53e3e;
+  margin: 0;
+}
