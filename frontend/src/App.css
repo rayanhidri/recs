@@ -2520,3 +2520,19 @@ body {
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
   }
 }
+
+.chat-back-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px 4px 0;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .chat-back-btn { display: block; }
+}

@@ -201,7 +201,7 @@ export default function Chat() {
   if (loading) return <div className="chat-loading">loading...</div>
 
   return (
-    <div className="chat-container">
+    <div className={`chat-container ${activeConversation ? 'has-active' : ''}`}>
       {/* Incoming Call Modal */}
       {callState === 'receiving' && incomingCall && (
         <div className="call-modal-overlay">
@@ -311,6 +311,7 @@ export default function Chat() {
         {activeConversation ? (
           <>
             <div className="chat-main-header">
+              <button className="chat-back-btn" onClick={() => setActiveConversation(null)}>←</button>
               <Avatar
                 avatar={activeConversation.other_avatar} username={activeConversation.other_username}
                 className="chat-main-avatar"
