@@ -75,7 +75,6 @@ class UserProfile(BaseModel):
     tuned_in: int
     tuned_to: int
     is_following: bool = False
-    streak: int = 0
 
     class Config:
         from_attributes = True

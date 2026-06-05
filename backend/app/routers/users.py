@@ -1,34 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, cast, Date
-from datetime import date, timedelta
+from sqlalchemy import func
 from ..database import get_db
 from ..models import User, Follow, Rec
 from ..schemas import UserProfile, UserUpdate
 from ..auth import get_current_user_id
-
-def compute_streak(user_id: int, db: Session) -> int:
-    dates = db.query(cast(Rec.created_at, Date)).filter(
-        Rec.user_id == user_id
-    ).distinct().order_by(cast(Rec.created_at, Date).desc()).all()
-
-    if not dates:
-        return 0
-
-    dates = [d[0] for d in dates]
-    today = date.today()
-
-    if dates[0] < today - timedelta(days=1):
-        return 0
-
-    streak = 1
-    for i in range(1, len(dates)):
-        if (dates[i - 1] - dates[i]).days == 1:
-            streak += 1
-        else:
-            break
-
-    return streak
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -49,7 +25,6 @@ def get_current_user(db: Session = Depends(get_db), current_user_id: int = Depen
         tuned_in=tuned_in,
         tuned_to=tuned_to,
         is_following=False,
-        streak=compute_streak(user.id, db)
     )
 
 @router.patch("/me", response_model=UserProfile)
@@ -77,7 +52,6 @@ def update_current_user(updates: UserUpdate, db: Session = Depends(get_db), curr
         tuned_in=tuned_in,
         tuned_to=tuned_to,
         is_following=False,
-        streak=compute_streak(user.id, db)
     )
 
 @router.get("/search", response_model=list[UserProfile])
@@ -176,7 +150,6 @@ def get_user_profile(username: str, db: Session = Depends(get_db), current_user_
         tuned_in=tuned_in,
         tuned_to=tuned_to,
         is_following=is_following,
-        streak=compute_streak(user.id, db)
     )
 
 @router.post("/{username}/follow")

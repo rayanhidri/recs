@@ -184,12 +184,6 @@ export default function Profile() {
             <span className="stat-number">{user.tuned_to}</span>
             <span className="stat-label">tuned to</span>
           </div>
-          {user.streak > 0 && (
-            <div className="stat streak-stat">
-              <span className="stat-number streak-number">🔥 {user.streak}</span>
-              <span className="stat-label">day streak</span>
-            </div>
-          )}
         </div>
 
         {isOwnProfile ? (

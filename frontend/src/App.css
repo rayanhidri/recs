@@ -2139,6 +2139,3 @@ body {
   overflow: hidden;
 }
 
-/* Streak stat on profile */
-.streak-stat { cursor: default; }
-.streak-number { font-size: 1rem; }
