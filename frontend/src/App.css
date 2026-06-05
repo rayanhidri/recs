@@ -1337,6 +1337,7 @@ body {
 .chat-container {
   display: flex;
   height: calc(100vh - 61px);
+  height: calc(100dvh - 61px);
   width: 100%;
   background: #fff;
 }
@@ -2510,12 +2511,18 @@ body {
     padding-bottom: calc(60px + env(safe-area-inset-bottom) + 20px);
   }
 
-  /* Chat — already has mobile logic, just refine */
+  /* Chat — use dvh so height shrinks when keyboard opens */
   .chat-container {
-    height: calc(100vh - 60px - env(safe-area-inset-bottom));
+    height: calc(100vh - 61px);
+    height: calc(100dvh - 61px);
   }
 
-  /* chat input area needs space for safe area */
+  /* Prevent iOS auto-zoom on input focus (font-size must be >= 16px) */
+  .chat-input {
+    font-size: 16px;
+  }
+
+  /* Safe area for input bar */
   .chat-input-area {
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
   }
