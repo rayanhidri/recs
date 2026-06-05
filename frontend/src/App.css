@@ -343,6 +343,7 @@ body {
 
 .profile-rec-type {
   display: inline-block;
+  align-self: flex-start;
   font-size: 0.72rem;
   padding: 2px 8px;
   border-radius: 10px;
