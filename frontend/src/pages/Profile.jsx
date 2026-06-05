@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing, deleteRec, getPinnedRecs, getMyPinnedRecs, updatePinnedRecs } from '../api'
 import { getCategoryStyle } from '../utils/categoryColors'
+import Avatar from '../components/Avatar'
 import { useAuth } from '../context/AuthContext'
 import StartChatButton from '../components/StartChatButton'
 
@@ -169,11 +170,7 @@ export default function Profile() {
         <div className="avatar-container">
           {editing ? (
             <div className="avatar-edit">
-              <img 
-                src={avatar || 'https://via.placeholder.com/100'} 
-                alt="preview" 
-                className="profile-avatar"
-              />
+              <Avatar avatar={avatar} username={user?.username} className="profile-avatar" />
               <input
                 type="file"
                 accept="image/*"
@@ -186,11 +183,7 @@ export default function Profile() {
               </label>
             </div>
           ) : (
-            <img 
-              src={user.avatar || 'https://via.placeholder.com/100'} 
-              alt={user.username} 
-              className="profile-avatar" 
-            />
+            <Avatar avatar={user.avatar} username={user.username} className="profile-avatar" />
           )}
         </div>
         
@@ -375,7 +368,7 @@ export default function Profile() {
               ) : (
                 modalUsers.map(u => (
                   <div key={u.id} className="modal-user" onClick={() => { closeModal(); navigate(`/profile/${u.username}`); }}>
-                    <img src={u.avatar || 'https://via.placeholder.com/40'} alt={u.username} className="modal-avatar" />
+                    <Avatar avatar={u.avatar} username={u.username} className="modal-avatar" />
                     <div className="modal-user-info">
                       <span className="modal-username">{u.username}</span>
                       <span className="modal-bio">{u.bio || 'no bio'}</span>

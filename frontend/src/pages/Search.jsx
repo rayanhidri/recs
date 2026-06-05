@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { followUser, unfollowUser } from '../api'
 import api from '../api'
+import Avatar from '../components/Avatar'
 
 export default function Search() {
   const navigate = useNavigate()
@@ -63,9 +64,8 @@ export default function Search() {
         {loading && <p className="loading-text">searching...</p>}
         {users.map(user => (
           <div key={user.id} className="search-user">
-            <img 
-              src={user.avatar || 'https://via.placeholder.com/48'} 
-              alt={user.username} 
+            <Avatar
+              avatar={user.avatar} username={user.username}
               className="search-avatar"
               onClick={() => navigate(`/profile/${user.username}`)}
             />

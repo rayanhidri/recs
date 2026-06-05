@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getFeed, likeRec, unlikeRec, getComments, createComment, createRec, getConversations, shareRecToChat, saveRec, unsaveRec, getActivityFeed, getActivityClusters } from '../api'
 import { getCategoryStyle } from '../utils/categoryColors'
+import Avatar from '../components/Avatar'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -26,10 +27,8 @@ function QuotedCard({ rec, onNavigate }) {
   return (
     <div className="quoted-rec" onClick={() => rec.link && window.open(rec.link, '_blank')}>
       <div className="quoted-rec-header">
-        <img
-          src={rec.user_avatar || 'https://via.placeholder.com/20'}
-          alt={rec.username}
-          className="quoted-rec-avatar"
+        <Avatar
+          avatar={rec.user_avatar} username={rec.username} className="quoted-rec-avatar"
           onClick={(e) => { e.stopPropagation(); onNavigate(`/profile/${rec.username}`) }}
         />
         <span className="quoted-rec-username" onClick={(e) => { e.stopPropagation(); onNavigate(`/profile/${rec.username}`) }}>
@@ -135,10 +134,8 @@ function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
 
       <div className="post-header">
         <div className="post-user" onClick={() => onNavigate(`/profile/${isQuoteRec ? post.quoted_rec.username : post.username}`)}>
-          <img
-            src={(isQuoteRec ? post.quoted_rec.user_avatar : post.user_avatar) || 'https://via.placeholder.com/40'}
-            alt={post.username}
-            className="post-avatar"
+          <Avatar
+            avatar={isQuoteRec ? post.quoted_rec.user_avatar : post.user_avatar} username={isQuoteRec ? post.quoted_rec.username : post.username} className="post-avatar"
           />
           <div className="post-user-info">
             <span className="post-username">{isQuoteRec ? post.quoted_rec.username : post.username}</span>
@@ -224,9 +221,8 @@ function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
               <div className="comments-list">
                 {comments.map(comment => (
                   <div key={comment.id} className="comment">
-                    <img
-                      src={comment.user_avatar || 'https://via.placeholder.com/28'}
-                      alt={comment.username}
+                    <Avatar
+                      avatar={comment.user_avatar} username={comment.username}
                       className="comment-avatar"
                       onClick={() => onNavigate(`/profile/${comment.username}`)}
                     />
@@ -297,7 +293,7 @@ function Post({ post, onLike, onSave, onNavigate, onQuoted }) {
               ) : (
                 conversations.map(conv => (
                   <div key={conv.id} className="modal-user send-conv-item" onClick={() => handleSendToConversation(conv)}>
-                    <img src={conv.other_avatar || 'https://via.placeholder.com/40'} alt="" className="modal-avatar" />
+                    <Avatar avatar={conv.other_avatar} username={conv.other_username} className="modal-avatar" />
                     <span className="modal-username">{conv.other_username}</span>
                     {sendingTo === conv.id && <span className="send-status">sending...</span>}
                     {sentTo === conv.id && <span className="send-status sent">sent ✓</span>}
@@ -330,10 +326,9 @@ function ClusterCard({ cluster, onNavigate }) {
       <div className="cluster-card-footer">
         <div className="cluster-avatars">
           {cluster.posters.slice(0, 4).map((p, i) => (
-            <img
+            <Avatar
               key={i}
-              src={p.avatar || 'https://via.placeholder.com/22'}
-              alt={p.username}
+              avatar={p.avatar} username={p.username}
               title={p.username}
               onClick={e => { e.stopPropagation(); onNavigate(`/profile/${p.username}`) }}
             />
@@ -353,9 +348,8 @@ function ActivitySignal({ event, onNavigate }) {
 
   return (
     <div className="activity-signal">
-      <img
-        src={event.actor_avatar || 'https://via.placeholder.com/22'}
-        alt={event.actor_username}
+      <Avatar
+        avatar={event.actor_avatar} username={event.actor_username}
         className="activity-avatar"
         onClick={() => onNavigate(`/profile/${event.actor_username}`)}
       />

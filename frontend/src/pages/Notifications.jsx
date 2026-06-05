@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getNotifications, markNotificationsRead } from '../api'
+import Avatar from '../components/Avatar'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -89,11 +90,7 @@ export default function Notifications() {
               onClick={() => handleClick(notif)}
             >
               <div className="notif-avatar-wrapper">
-                <img 
-                  src={notif.from_user_avatar || 'https://via.placeholder.com/44'} 
-                  alt={notif.from_username}
-                  className="notif-avatar"
-                />
+                <Avatar avatar={notif.from_user_avatar} username={notif.from_username} className="notif-avatar" />
                 <span className={`notif-icon notif-icon-${notif.type}`}>
                   {getNotificationIcon(notif.type)}
                 </span>

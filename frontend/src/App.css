@@ -1776,6 +1776,33 @@ body {
 }
 .msg-received .rec-msg-title { color: #444; }
 
+/* Avatar fallback — initials */
+.avatar-fallback {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  user-select: none;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+.profile-avatar.avatar-fallback    { font-size: 1.75rem; }
+.post-avatar.avatar-fallback       { font-size: 0.9rem; }
+.comment-avatar.avatar-fallback    { font-size: 0.6rem; }
+.msg-avatar.avatar-fallback        { font-size: 0.5rem; }
+.conv-avatar.avatar-fallback       { font-size: 0.85rem; }
+.modal-avatar.avatar-fallback      { font-size: 0.85rem; }
+.chat-main-avatar.avatar-fallback  { font-size: 0.65rem; }
+.call-screen-avatar.avatar-fallback { font-size: 1.6rem; }
+.cluster-avatars .avatar-fallback  { font-size: 0.5rem; }
+.activity-avatar.avatar-fallback   { font-size: 0.45rem; }
+.quoted-rec-avatar.avatar-fallback { font-size: 0.45rem; }
+.search-avatar.avatar-fallback     { font-size: 1rem; }
+.pinned-preview-avatar.avatar-fallback { font-size: 0.55rem; }
+
 /* Edit rec */
 .edit-rec-actions {
   display: flex;

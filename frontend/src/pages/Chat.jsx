@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import Avatar from '../components/Avatar'
 import { useNavigate } from 'react-router-dom'
 import { getConversations, getMessages, getMe } from '../api'
 import useWebSocket from '../hooks/useWebSocket'
@@ -246,9 +247,8 @@ export default function Chat() {
               </>
             ) : (
               <>
-                <img 
-                  src={activeConversation.other_avatar || 'https://via.placeholder.com/120'} 
-                  alt=""
+                <Avatar
+                  avatar={activeConversation.other_avatar} username={activeConversation.other_username}
                   className="call-screen-avatar"
                 />
                 <h2>{activeConversation.other_username}</h2>
@@ -286,9 +286,8 @@ export default function Chat() {
                 className={`conv-item ${activeConversation?.id === conv.id ? 'active' : ''}`}
                 onClick={() => selectConversation(conv)}
               >
-                <img 
-                  src={conv.other_avatar || 'https://via.placeholder.com/56'} 
-                  alt=""
+                <Avatar
+                  avatar={conv.other_avatar} username={conv.other_username}
                   className="conv-avatar"
                 />
                 <div className="conv-details">
@@ -312,9 +311,8 @@ export default function Chat() {
         {activeConversation ? (
           <>
             <div className="chat-main-header">
-              <img 
-                src={activeConversation.other_avatar || 'https://via.placeholder.com/44'} 
-                alt=""
+              <Avatar
+                avatar={activeConversation.other_avatar} username={activeConversation.other_username}
                 className="chat-main-avatar"
                 onClick={() => navigate(`/profile/${activeConversation.other_username}`)}
               />
@@ -342,7 +340,7 @@ export default function Chat() {
                     {!isMine && (
                       <div className="msg-avatar-col">
                         {showAvatar ? (
-                          <img src={msg.sender_avatar || 'https://via.placeholder.com/28'} alt="" className="msg-avatar" />
+                          <Avatar avatar={msg.sender_avatar} username={msg.sender_username} className="msg-avatar" />
                         ) : (
                           <div className="msg-avatar-spacer"></div>
                         )}
@@ -374,7 +372,7 @@ export default function Chat() {
               {isTyping && (
                 <div className="msg msg-received">
                   <div className="msg-avatar-col">
-                    <img src={activeConversation.other_avatar || 'https://via.placeholder.com/28'} alt="" className="msg-avatar" />
+                    <Avatar avatar={activeConversation.other_avatar} username={activeConversation.other_username} className="msg-avatar" />
                   </div>
                   <div className="msg-bubble typing">
                     <span></span><span></span><span></span>

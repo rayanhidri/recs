@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getRec, likeRec, unlikeRec, getComments, createComment } from '../api'
 import { getCategoryStyle } from '../utils/categoryColors'
+import Avatar from '../components/Avatar'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -91,11 +92,7 @@ export default function RecDetail() {
       <article className="post">
         <div className="post-header">
           <div className="post-user" onClick={() => navigate(`/profile/${rec.username}`)}>
-            <img 
-              src={rec.user_avatar || 'https://via.placeholder.com/40'} 
-              alt={rec.username} 
-              className="post-avatar"
-            />
+            <Avatar avatar={rec.user_avatar} username={rec.username} className="post-avatar" />
             <div className="post-user-info">
               <span className="post-username">{rec.username}</span>
               <div className="post-meta">
@@ -145,12 +142,7 @@ export default function RecDetail() {
             <div className="comments-list">
               {comments.map(comment => (
                 <div key={comment.id} className="comment">
-                  <img 
-                    src={comment.user_avatar || 'https://via.placeholder.com/28'} 
-                    alt={comment.username}
-                    className="comment-avatar"
-                    onClick={() => navigate(`/profile/${comment.username}`)}
-                  />
+                  <Avatar avatar={comment.user_avatar} username={comment.username} className="comment-avatar" onClick={() => navigate(`/profile/${comment.username}`)} />
                   <div className="comment-body">
                     <span className="comment-username" onClick={() => navigate(`/profile/${comment.username}`)}>
                       {comment.username}

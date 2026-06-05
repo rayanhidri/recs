@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getSavedRecs, likeRec, unlikeRec, saveRec, unsaveRec, getComments, createComment, createRec, getConversations, shareRecToChat } from '../api'
+import Avatar from '../components/Avatar'
 
 function timeAgo(dateString) {
   const now = new Date()
@@ -91,7 +92,7 @@ function SavedPost({ post, onLike, onUnsave, onNavigate }) {
 
       <div className="post-header">
         <div className="post-user" onClick={() => onNavigate(`/profile/${displayRec.username}`)}>
-          <img src={displayRec.user_avatar || 'https://via.placeholder.com/40'} alt={displayRec.username} className="post-avatar" />
+          <Avatar avatar={displayRec.user_avatar} username={displayRec.username} className="post-avatar" />
           <div className="post-user-info">
             <span className="post-username">{displayRec.username}</span>
             <div className="post-meta">
@@ -135,7 +136,7 @@ function SavedPost({ post, onLike, onUnsave, onNavigate }) {
               <div className="comments-list">
                 {comments.map(comment => (
                   <div key={comment.id} className="comment">
-                    <img src={comment.user_avatar || 'https://via.placeholder.com/28'} alt={comment.username} className="comment-avatar" onClick={() => onNavigate(`/profile/${comment.username}`)} />
+                    <Avatar avatar={comment.user_avatar} username={comment.username} className="comment-avatar" onClick={() => onNavigate(`/profile/${comment.username}`)} />
                     <div className="comment-body">
                       <span className="comment-username" onClick={() => onNavigate(`/profile/${comment.username}`)}>{comment.username}</span>
                       <span className="comment-content">{comment.content}</span>
@@ -179,7 +180,7 @@ function SavedPost({ post, onLike, onUnsave, onNavigate }) {
               {conversations.length === 0 ? <p className="empty-modal">no conversations yet</p> : (
                 conversations.map(conv => (
                   <div key={conv.id} className="modal-user send-conv-item" onClick={() => handleSendToConversation(conv)}>
-                    <img src={conv.other_avatar || 'https://via.placeholder.com/40'} alt="" className="modal-avatar" />
+                    <Avatar avatar={conv.other_avatar} username={conv.other_username} className="modal-avatar" />
                     <span className="modal-username">{conv.other_username}</span>
                     {sendingTo === conv.id && <span className="send-status">sending...</span>}
                     {sentTo === conv.id && <span className="send-status sent">sent ✓</span>}
