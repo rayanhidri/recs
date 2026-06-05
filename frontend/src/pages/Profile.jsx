@@ -16,6 +16,8 @@ export default function Profile() {
   const [editing, setEditing] = useState(false)
   const [bio, setBio] = useState('')
   const [avatar, setAvatar] = useState('')
+  const [editUsername, setEditUsername] = useState('')
+  const [usernameError, setUsernameError] = useState('')
   const [showModal, setShowModal] = useState(null)
   const [modalUsers, setModalUsers] = useState([])
   const [loadingModal, setLoadingModal] = useState(false)
@@ -36,6 +38,7 @@ export default function Profile() {
         setUser(userRes.data)
         setBio(userRes.data.bio || '')
         setAvatar(userRes.data.avatar || '')
+        setEditUsername(userRes.data.username || '')
 
         const recsRes = await getUserRecs(userRes.data.username)
         setRecs(recsRes.data)
@@ -93,12 +96,23 @@ export default function Profile() {
   }
 
   const handleSave = async () => {
+    setUsernameError('')
     try {
-      const res = await updateMe({ bio, avatar })
+      const payload = { bio, avatar }
+      if (editUsername.trim() !== user.username) {
+        payload.username = editUsername.trim()
+      }
+      const res = await updateMe(payload)
       setUser(res.data)
+      setEditUsername(res.data.username)
       setEditing(false)
     } catch (err) {
-      console.error(err)
+      const detail = err.response?.data?.detail || ''
+      if (detail.toLowerCase().includes('username')) {
+        setUsernameError(detail)
+      } else {
+        console.error(err)
+      }
     }
   }
 
@@ -187,8 +201,22 @@ export default function Profile() {
           )}
         </div>
         
-        <h2 className="profile-username">{user.username}</h2>
-        
+        {editing ? (
+          <div className="edit-username-wrapper">
+            <input
+              type="text"
+              value={editUsername}
+              onChange={(e) => { setEditUsername(e.target.value); setUsernameError('') }}
+              className="edit-username-input"
+              placeholder="username"
+              maxLength={30}
+            />
+            {usernameError && <p className="username-error">{usernameError}</p>}
+          </div>
+        ) : (
+          <h2 className="profile-username">{user.username}</h2>
+        )}
+
         {editing ? (
           <textarea
             placeholder="write your bio..."

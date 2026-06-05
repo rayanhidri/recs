@@ -83,6 +83,7 @@ class UserProfile(BaseModel):
 class UserUpdate(BaseModel):
     bio: Optional[str] = None
     avatar: Optional[str] = None
+    username: Optional[str] = None
 
 class RecUpdate(BaseModel):
     category: Optional[str] = None

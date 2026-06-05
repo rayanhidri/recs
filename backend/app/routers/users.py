@@ -36,6 +36,16 @@ def get_current_user(db: Session = Depends(get_db), current_user_id: int = Depen
 def update_current_user(updates: UserUpdate, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
     user = db.query(User).filter(User.id == current_user_id).first()
     
+    if updates.username is not None:
+        new_username = updates.username.strip().lower()
+        if not new_username:
+            raise HTTPException(status_code=400, detail="Username cannot be empty")
+        if len(new_username) < 2 or len(new_username) > 30:
+            raise HTTPException(status_code=400, detail="Username must be 2-30 characters")
+        existing = db.query(User).filter(User.username == new_username, User.id != current_user_id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        user.username = new_username
     if updates.bio is not None:
         user.bio = updates.bio
     if updates.avatar is not None:
