@@ -611,6 +611,32 @@ body {
   margin-top: 8px;
 }
 
+.auth-divider {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 320px;
+  margin: 16px 0;
+  color: #999;
+  font-size: 0.85rem;
+  gap: 12px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e0e0e0;
+}
+
+.auth-google-first {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  justify-content: center;
+}
+
 .auth-switch {
   margin-top: 24px;
   color: #666;

@@ -10,3 +10,4 @@ python-dotenv==1.2.1
 email-validator==2.3.0
 pydantic[email]>=2.0.0
 websockets
+google-auth==2.40.0

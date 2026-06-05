@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { signup, login, getMe } from '../api'
+import { GoogleLogin } from '@react-oauth/google'
+import { signup, login, getMe, googleAuth } from '../api'
 import { useAuth } from '../context/AuthContext'
 
 export default function Signup() {
@@ -24,9 +25,24 @@ export default function Signup() {
     }
   }
 
+  const handleGoogle = async (credentialResponse) => {
+    try {
+      await googleAuth(credentialResponse.credential)
+      const res = await getMe()
+      setUser(res.data)
+      navigate('/')
+    } catch (err) {
+      setError('google sign-in failed')
+    }
+  }
+
   return (
     <div className="auth-page">
       <h2>signup</h2>
+      <div className="auth-google-first">
+        <GoogleLogin onSuccess={handleGoogle} onError={() => setError('google sign-in failed')} />
+      </div>
+      <div className="auth-divider">or sign up with email</div>
       <form onSubmit={handleSubmit} className="auth-form">
         {error && <p className="error">{error}</p>}
         <input

@@ -31,6 +31,12 @@ export const logout = () => {
   localStorage.removeItem('token')
 }
 
+export const googleAuth = async (credential) => {
+  const res = await api.post('/auth/google', { credential })
+  localStorage.setItem('token', res.data.access_token)
+  return res
+}
+
 // Users
 export const getMe = () => api.get('/users/me')
 export const getUser = (username) => api.get(`/users/${username}`)
