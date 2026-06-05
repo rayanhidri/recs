@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing, deleteRec } from '../api'
+import { getMe, getUser, getUserRecs, followUser, unfollowUser, updateMe, getFollowers, getFollowing, deleteRec, getPinnedRecs, getMyPinnedRecs, updatePinnedRecs } from '../api'
 import { useAuth } from '../context/AuthContext'
 import StartChatButton from '../components/StartChatButton'
 
@@ -18,6 +18,10 @@ export default function Profile() {
   const [modalUsers, setModalUsers] = useState([])
   const [loadingModal, setLoadingModal] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [pinned, setPinned] = useState([])
+  const [showPinModal, setShowPinModal] = useState(false)
+  const [selectedPins, setSelectedPins] = useState([])
+  const [savingPins, setSavingPins] = useState(false)
 
   const isOwnProfile = !username || username === currentUser?.username
 
@@ -33,6 +37,11 @@ export default function Profile() {
 
         const recsRes = await getUserRecs(userRes.data.username)
         setRecs(recsRes.data)
+
+        const pinnedRes = isOwnProfile
+          ? await getMyPinnedRecs()
+          : await getPinnedRecs(userRes.data.username)
+        setPinned(pinnedRes.data)
       } catch (err) {
         console.error(err)
       } finally {
@@ -88,6 +97,33 @@ export default function Profile() {
       setEditing(false)
     } catch (err) {
       console.error(err)
+    }
+  }
+
+  const openPinModal = () => {
+    setSelectedPins(pinned.map(p => p.id))
+    setShowPinModal(true)
+  }
+
+  const togglePinSelection = (recId) => {
+    setSelectedPins(prev =>
+      prev.includes(recId)
+        ? prev.filter(id => id !== recId)
+        : prev.length < 3 ? [...prev, recId] : prev
+    )
+  }
+
+  const savePins = async () => {
+    setSavingPins(true)
+    try {
+      await updatePinnedRecs(selectedPins)
+      const res = await getMyPinnedRecs()
+      setPinned(res.data)
+      setShowPinModal(false)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSavingPins(false)
     }
   }
 
@@ -208,6 +244,49 @@ export default function Profile() {
         )}
       </div>
 
+      {/* Right now section */}
+      {(pinned.length > 0 || isOwnProfile) && (
+        <div className="right-now-section">
+          <div className="right-now-header">
+            <span className="right-now-label">right now</span>
+            {isOwnProfile && (
+              <button className="right-now-edit" onClick={openPinModal}>
+                {pinned.length === 0 ? '+ add' : 'edit'}
+              </button>
+            )}
+          </div>
+          {pinned.length === 0 ? (
+            <p className="right-now-empty" onClick={openPinModal}>
+              what are you into right now?
+            </p>
+          ) : (
+            <div className="right-now-grid">
+              {pinned.map(rec => (
+                <div
+                  key={rec.id}
+                  className="pinned-card"
+                  onClick={() => rec.link && window.open(rec.link, '_blank')}
+                >
+                  <div className="pinned-card-img">
+                    {rec.image
+                      ? <img src={rec.image} alt={rec.title} />
+                      : <div className="pinned-card-placeholder">{rec.category}</div>
+                    }
+                  </div>
+                  <p className="pinned-card-title">{rec.title}</p>
+                  <span className="pinned-card-category">{rec.category}</span>
+                </div>
+              ))}
+              {isOwnProfile && pinned.length < 3 && [...Array(3 - pinned.length)].map((_, i) => (
+                <div key={`empty-${i}`} className="pinned-card pinned-card-empty" onClick={openPinModal}>
+                  <div className="pinned-card-img pinned-card-img-empty">+</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="profile-recs">
         {recs.length === 0 ? (
           <p className="no-recs">no recs yet</p>
@@ -244,6 +323,43 @@ export default function Profile() {
           ))
         )}
       </div>
+
+      {showPinModal && (
+        <div className="modal-overlay" onClick={() => setShowPinModal(false)}>
+          <div className="modal pin-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>right now <span className="pin-modal-count">{selectedPins.length}/3</span></h3>
+              <button className="modal-close" onClick={() => setShowPinModal(false)}>×</button>
+            </div>
+            <p className="pin-modal-hint">pick up to 3 recs you're into right now</p>
+            <div className="pin-picker-grid">
+              {recs.map(rec => {
+                const selected = selectedPins.includes(rec.id)
+                const maxed = selectedPins.length >= 3 && !selected
+                return (
+                  <div
+                    key={rec.id}
+                    className={`pin-picker-item ${selected ? 'selected' : ''} ${maxed ? 'maxed' : ''}`}
+                    onClick={() => !maxed && togglePinSelection(rec.id)}
+                  >
+                    <div className="pin-picker-img">
+                      {rec.image
+                        ? <img src={rec.image} alt={rec.title} />
+                        : <div className="pin-picker-placeholder">{rec.category[0]}</div>
+                      }
+                      {selected && <div className="pin-picker-check">✓</div>}
+                    </div>
+                    <p className="pin-picker-title">{rec.title || rec.category}</p>
+                  </div>
+                )
+              })}
+            </div>
+            <button className="pin-save-btn" onClick={savePins} disabled={savingPins}>
+              {savingPins ? 'saving...' : 'save'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>

@@ -1,10 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from typing import List
+from pydantic import BaseModel
 from ..database import get_db
-from ..models import User, Follow, Rec
-from ..schemas import UserProfile, UserUpdate
+from ..models import User, Follow, Rec, PinnedRec, Like, Save
+from ..schemas import UserProfile, UserUpdate, RecOut
 from ..auth import get_current_user_id
+
+class PinnedRecsUpdate(BaseModel):
+    rec_ids: List[int]
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -184,3 +189,59 @@ def unfollow_user(username: str, db: Session = Depends(get_db), current_user_id:
     db.commit()
     return {"message": f"Unfollowed {username}"}
 
+
+def _rec_to_out(rec: Rec, db: Session, user_id: int) -> RecOut:
+    from sqlalchemy import func as sqlfunc
+    likes_count = db.query(sqlfunc.count(Like.id)).filter(Like.rec_id == rec.id).scalar()
+    is_liked = db.query(Like).filter(Like.user_id == user_id, Like.rec_id == rec.id).first() is not None
+    is_saved = db.query(Save).filter(Save.user_id == user_id, Save.rec_id == rec.id).first() is not None
+    owner = db.query(User).filter(User.id == rec.user_id).first()
+    return RecOut(
+        **rec.__dict__,
+        username=owner.username if owner else "",
+        user_avatar=owner.avatar or "" if owner else "",
+        likes_count=likes_count,
+        is_liked=is_liked,
+        is_saved=is_saved,
+    )
+
+
+@router.get("/me/pinned", response_model=List[RecOut])
+def get_my_pinned(db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    pins = db.query(PinnedRec).filter(PinnedRec.user_id == current_user_id).order_by(PinnedRec.created_at.asc()).limit(3).all()
+    results = []
+    for pin in pins:
+        rec = db.query(Rec).filter(Rec.id == pin.rec_id).first()
+        if rec:
+            results.append(_rec_to_out(rec, db, current_user_id))
+    return results
+
+
+@router.get("/{username}/pinned", response_model=List[RecOut])
+def get_pinned(username: str, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    pins = db.query(PinnedRec).filter(PinnedRec.user_id == user.id).order_by(PinnedRec.created_at.asc()).limit(3).all()
+    results = []
+    for pin in pins:
+        rec = db.query(Rec).filter(Rec.id == pin.rec_id).first()
+        if rec:
+            results.append(_rec_to_out(rec, db, current_user_id))
+    return results
+
+
+@router.put("/me/pinned")
+def update_pinned(body: PinnedRecsUpdate, db: Session = Depends(get_db), current_user_id: int = Depends(get_current_user_id)):
+    rec_ids = body.rec_ids[:3]
+    # Verify all recs belong to this user
+    for rec_id in rec_ids:
+        rec = db.query(Rec).filter(Rec.id == rec_id, Rec.user_id == current_user_id).first()
+        if not rec:
+            raise HTTPException(status_code=400, detail=f"Rec {rec_id} not found or not yours")
+    # Replace
+    db.query(PinnedRec).filter(PinnedRec.user_id == current_user_id).delete()
+    for rec_id in rec_ids:
+        db.add(PinnedRec(user_id=current_user_id, rec_id=rec_id))
+    db.commit()
+    return {"message": "Pinned updated"}

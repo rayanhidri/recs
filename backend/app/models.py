@@ -56,6 +56,14 @@ class Like(Base):
 
     rec = relationship("Rec", back_populates="likes")
 
+class PinnedRec(Base):
+    __tablename__ = "pinned_recs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    rec_id = Column(Integer, ForeignKey("recs.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 class Save(Base):
     __tablename__ = "saves"
 
